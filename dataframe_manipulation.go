@@ -55,20 +55,22 @@ func (df *DataFrame) Replace(column, old, new string) {
 	name.Replace(old, new)
 }
 
-func (df *DataFrame) DropByIndex(index int) {
+func (df *DataFrame) DropByIndex(index ...int) {
 	var newSeries []Series
-	newSeries = append(newSeries[:index], newSeries[index+1:]...)
+	for i, series := range df.Columns {
+		if !ArrayContainsInteger(index, i) {
+			newSeries = append(newSeries, series)
+		}
+	}
 	df.Columns = newSeries
 }
 
-func (df *DataFrame) DropByName(name string) {
+func (df *DataFrame) DropByName(name ...string) {
 	var newSeries []Series
-	var index int
-	for i, series := range df.Columns {
-		if series.Name == name {
-			index = i
+	for _, series := range df.Columns {
+		if !ArrayContainsString(name, series.Name) {
+			newSeries = append(newSeries, series)
 		}
 	}
-	newSeries = append(newSeries[:index], newSeries[index+1:]...)
 	df.Columns = newSeries
 }

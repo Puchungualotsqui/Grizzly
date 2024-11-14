@@ -222,3 +222,21 @@ func ArrayCountFloatDuplicates(elements []float64) map[float64]int {
 
 	return result
 }
+
+func ArrayContainsInteger(arr []int, target int) bool {
+	for _, value := range arr {
+		if value == target {
+			return true // Element found
+		}
+	}
+	return false // Element not found
+}
+
+func ArrayContainsString(arr []string, target string) bool {
+	for _, value := range arr {
+		if value == target {
+			return true // Element found
+		}
+	}
+	return false // Element not found
+}
