@@ -74,3 +74,8 @@ func (df *DataFrame) GetVariance() DataFrame {
 		return series.GetVariance()
 	})
 }
+
+func (df *DataFrame) CountWord(columnName string, word string) int {
+	series := df.GetColumnByName(columnName)
+	return series.CountWord(word)
+}

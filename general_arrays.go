@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-func ArrayCountEmpty(words []string) int {
+func ArrayCountWord(words []string, word string) int {
 	numGoroutines := runtime.NumCPU() // Use the number of available CPU cores
 	length := len(words)
 	if length == 0 {
@@ -31,7 +31,7 @@ func ArrayCountEmpty(words []string) int {
 			defer wg.Done()
 			count := 0
 			for j := start; j < end; j++ {
-				if words[j] == "" {
+				if words[j] == word {
 					count++
 				}
 			}

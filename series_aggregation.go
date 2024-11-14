@@ -1,18 +1,10 @@
 package grizzly
 
-func (series *Series) CountEmpty() int {
-	// Float series does not admit empty values
+func (series *Series) CountWord(word string) int {
 	if series.DataType == "float" {
 		return 0
-	}
-	return ArrayCountEmpty(series.String)
-}
-
-func (series *Series) CountNoEmpty() int {
-	if series.DataType == "float" {
-		return series.GetLength()
 	} else {
-		return series.GetLength() - series.CountEmpty()
+		return ArrayCountWord(series.String, word)
 	}
 }
 

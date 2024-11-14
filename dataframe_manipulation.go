@@ -8,7 +8,7 @@ func (df *DataFrame) GetColumnByName(name string) Series {
 			return series
 		}
 	}
-	return Series{Name: ""}
+	panic(fmt.Sprintf("%s not found", name))
 }
 
 func (df *DataFrame) GetColumnByIndex(index int) Series {
