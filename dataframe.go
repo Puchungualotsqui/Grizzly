@@ -39,6 +39,12 @@ func (df *DataFrame) AddSeries(series Series) {
 func (df *DataFrame) Print(max int) {
 	max = MinInt(df.GetLength(), max)
 	var output []string
+	names := df.GetColumnNames()
+	for _, name := range names {
+		output = append(output, name)
+	}
+	fmt.Println(strings.Join(output, "  "))
+	output = output[:0]
 	for i := 0; i < max; i++ {
 		output = append(output, strconv.Itoa(i))
 		for _, series := range df.Columns {

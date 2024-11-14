@@ -2,26 +2,22 @@ package grizzly
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 	"strconv"
 )
 
-func ImportCSV(filepath string) (DataFrame, error) {
+func ImportCSV(filepath string) DataFrame {
 	file, err := os.Open(filepath)
 	if err != nil {
-		return DataFrame{}, fmt.Errorf("failed to open file: %v", err)
+		panic("File was not found")
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
-	if err != nil {
-		return DataFrame{}, fmt.Errorf("failed to read CSV file: %v", err)
-	}
 
 	if len(records) == 0 {
-		return DataFrame{}, fmt.Errorf("CSV file is empty")
+		return DataFrame{}
 	}
 
 	headers := records[0]
@@ -44,5 +40,5 @@ func ImportCSV(filepath string) (DataFrame, error) {
 		}
 	}
 
-	return DataFrame{Columns: columns}, nil
+	return DataFrame{Columns: columns}
 }
