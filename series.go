@@ -30,6 +30,11 @@ func NewFloatSeries(name string, Float []float64) Series {
 	}
 }
 
+func (series *Series) ResizeSeries(targetLength int, defaultValue string) {
+	series.ConvertFloatToString()
+	series.String = ArrayResizeString(series.String, targetLength, defaultValue)
+}
+
 func (series *Series) Print(max int) {
 	max = MinInt(max, series.GetLength())
 	if series.DataType == "float" {

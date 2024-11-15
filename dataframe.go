@@ -36,6 +36,21 @@ func (df *DataFrame) AddSeries(series Series) {
 	}
 }
 
+func (df *DataFrame) FixShape(defaultValue string) {
+	var size int
+	for _, series := range df.Columns {
+		size = MaxInt(size, series.GetLength())
+	}
+	for i, _ := range df.Columns {
+		df.Columns[i].ResizeSeries(size, defaultValue)
+	}
+}
+
+func (df *DataFrame) AddSeriesForced(series Series, defaultValue string) {
+	df.Columns = append(df.Columns, series)
+	df.FixShape(defaultValue)
+}
+
 func (df *DataFrame) Print(max int) {
 	max = MinInt(df.GetLength(), max)
 	var output []string

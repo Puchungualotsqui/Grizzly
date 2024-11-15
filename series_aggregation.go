@@ -70,3 +70,10 @@ func (series *Series) GetVariance() float64 {
 	}
 	return ArrayVariance(series.Float)
 }
+
+func (series *Series) GetNonFloatValues() []string {
+	if series.DataType == "float" {
+		return []string{}
+	}
+	return ArrayGetNonFloatValues(series.String)
+}

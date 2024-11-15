@@ -27,12 +27,6 @@ func (df *DataFrame) GenericCalculation(operation func(series Series) float64) D
 	return DataFrame{result}
 }
 
-func (df *DataFrame) CountEmpty() DataFrame {
-	return df.GenericCalculation(func(series Series) float64 {
-		return series.GetSum()
-	})
-}
-
 func (df *DataFrame) GetMax() DataFrame {
 	return df.GenericCalculation(func(series Series) float64 {
 		return series.GetMax()
@@ -75,7 +69,29 @@ func (df *DataFrame) GetVariance() DataFrame {
 	})
 }
 
-func (df *DataFrame) CountWord(columnName string, word string) int {
-	series := df.GetColumnByName(columnName)
-	return series.CountWord(word)
+func (df *DataFrame) CountWord(word string) DataFrame {
+	var columns []Series
+	var count []float64
+	for _, series := range df.Columns {
+		count[0] = float64(series.CountWord(word))
+		columns = append(columns, NewFloatSeries(series.Name, count))
+	}
+	return DataFrame{columns}
+}
+
+func (df *DataFrame) GetNonFloatValues() DataFrame {
+	var result []Series
+	var tempSeries Series
+	var tempString []string
+	var resultDataframe DataFrame
+	for _, column := range df.Columns {
+		tempString = column.GetNonFloatValues()
+		if len(tempString) != 0 {
+			tempSeries = NewStringSeries(column.Name, tempString)
+			result = append(result, tempSeries)
+		}
+	}
+	resultDataframe = DataFrame{result}
+	resultDataframe.FixShape("")
+	return resultDataframe
 }

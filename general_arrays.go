@@ -4,6 +4,7 @@ import (
 	"math"
 	"runtime"
 	"sort"
+	"strconv"
 	"sync"
 )
 
@@ -239,4 +240,24 @@ func ArrayContainsString(arr []string, target string) bool {
 		}
 	}
 	return false // Element not found
+}
+
+func ArrayGetNonFloatValues(input []string) []string {
+	var nonConvertible []string
+
+	for _, str := range input {
+		_, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			nonConvertible = append(nonConvertible, str) // Collect non-convertible elements
+		}
+	}
+
+	return nonConvertible
+}
+
+func ArrayResizeString(input []string, targetLength int, defaultValue string) []string {
+	for len(input) < targetLength {
+		input = append(input, defaultValue)
+	}
+	return input
 }

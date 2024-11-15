@@ -134,6 +134,9 @@ func (series *Series) FilterStringSeries(condition func(string) bool) []int {
 }
 
 func (series *Series) ConvertStringToFloat() {
+	if series.DataType == "float" {
+		return
+	}
 	// Determine the number of goroutines based on available CPUs
 	numGoroutines := runtime.NumCPU()
 	length := len(series.String)
@@ -189,6 +192,9 @@ func (series *Series) ConvertStringToFloat() {
 }
 
 func (series *Series) ConvertFloatToString() {
+	if series.DataType == "string" {
+		return
+	}
 	// Determine the number of goroutines based on available CPUs
 	numGoroutines := runtime.NumCPU()
 	length := len(series.Float)
