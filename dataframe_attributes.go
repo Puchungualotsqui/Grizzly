@@ -31,10 +31,10 @@ func (df *DataFrame) ContainsColumn(name string) bool {
 	return ArrayContainsString(names, name)
 }
 
-func (df *DataFrame) GetColumnByName(name string) Series {
-	for _, series := range df.Columns {
+func (df *DataFrame) GetColumnByName(name string) *Series {
+	for i, series := range df.Columns {
 		if series.Name == name {
-			return series
+			return &df.Columns[i]
 		}
 	}
 	panic(fmt.Sprintf("%s not found", name))
