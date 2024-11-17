@@ -3,11 +3,12 @@ package grizzly
 import (
 	"encoding/csv"
 	"os"
+	"runtime"
 	"strconv"
 	"sync"
 )
 
-// ImportCSV reads a CSV file and creates a DataFrame with optimized performance
+// ImportCSV reads a CSV file and creates a DataFrame with dynamic parallelism based on the number of CPUs
 func ImportCSV(filepath string) DataFrame {
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -40,23 +41,35 @@ func ImportCSV(filepath string) DataFrame {
 		}
 	}
 
-	// Use goroutines to populate columns in parallel
+	// Determine the number of goroutines based on available CPUs
+	numGoroutines := runtime.NumCPU()
+	chunkSize := (numCols + numGoroutines - 1) / numGoroutines
+
 	var wg sync.WaitGroup
-	wg.Add(numCols)
-	for colIndex := 0; colIndex < numCols; colIndex++ {
-		go func(i int) {
+	wg.Add(numGoroutines)
+
+	for g := 0; g < numGoroutines; g++ {
+		start := g * chunkSize
+		end := start + chunkSize
+		if end > numCols {
+			end = numCols
+		}
+
+		go func(start, end int) {
 			defer wg.Done()
-			for _, row := range records[1:] {
-				value := row[i]
-				// Attempt to parse as float
-				if floatValue, err := strconv.ParseFloat(value, 64); err == nil {
-					columns[i].Float = append(columns[i].Float, floatValue)
-					columns[i].DataType = "float"
-				} else {
-					columns[i].String = append(columns[i].String, value)
+			for colIndex := start; colIndex < end; colIndex++ {
+				for _, row := range records[1:] {
+					value := row[colIndex]
+					// Attempt to parse as float
+					if floatValue, err := strconv.ParseFloat(value, 64); err == nil {
+						columns[colIndex].Float = append(columns[colIndex].Float, floatValue)
+						columns[colIndex].DataType = "float"
+					} else {
+						columns[colIndex].String = append(columns[colIndex].String, value)
+					}
 				}
 			}
-		}(colIndex)
+		}(start, end)
 	}
 	wg.Wait()
 
