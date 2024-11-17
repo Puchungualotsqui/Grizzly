@@ -29,12 +29,13 @@ func (df *DataFrame) CreateStringColumn(name string, words []string) {
 }
 
 func (df *DataFrame) AddSeries(series Series) {
+	if len(df.Columns) == 0 {
+		df.Columns = append(df.Columns, series)
+	}
 	if series.GetLength() != df.GetLength() {
 		fmt.Println("ERROR: Cannot add a series with different length")
 	} else if IsNameRepeated(df.Columns, series.Name) {
 		fmt.Println("ERROR: Cannot add a series with repeat names")
-	} else {
-		df.Columns = append(df.Columns, series)
 	}
 }
 

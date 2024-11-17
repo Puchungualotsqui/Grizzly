@@ -3,6 +3,9 @@ package grizzly
 import "fmt"
 
 func (df *DataFrame) GetLength() int {
+	if len(df.Columns) == 0 {
+		return 0
+	}
 	series := df.Columns[0]
 	return series.GetLength()
 }
