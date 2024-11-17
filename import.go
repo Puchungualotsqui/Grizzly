@@ -2,80 +2,74 @@ package grizzly
 
 import (
 	"encoding/csv"
+	"log"
 	"os"
 	"runtime"
 	"strconv"
 	"sync"
 )
 
-func ImportCSV(filepath string, extra ...int) DataFrame {
+// ImportCSV reads a CSV file using streaming processing and creates a DataFrame with optimized performance
+func ImportCSV(filepath string) DataFrame {
 	file, err := os.Open(filepath)
 	if err != nil {
-		panic("File was not found")
+		log.Fatalf("Failed to open file: %v", err)
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 	headers, err := reader.Read()
 	if err != nil {
-		panic("Error reading CSV headers")
+		log.Fatalf("Error reading CSV headers: %v", err)
 	}
 	numCols := len(headers)
 
+	// Initialize Series for each column with empty data
 	columns := make([]Series, numCols)
 	for i, header := range headers {
 		columns[i] = Series{
 			Name:     header,
 			DataType: "string",
-			String:   make([]string, 0, 1000),
-			Float:    make([]float64, 0, 1000),
+			String:   []string{},
+			Float:    []float64{},
 		}
 	}
 
+	// Determine the number of goroutines for parallel processing
 	numGoroutines := runtime.NumCPU()
-	rowChannel := make(chan [][]string, numGoroutines*2)
+	rowChannel := make(chan []string, numGoroutines*2) // Buffered channel for rows
 	var wg sync.WaitGroup
 
+	// Launch goroutines to process rows
 	for g := 0; g < numGoroutines; g++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for rows := range rowChannel {
-				for _, row := range rows {
-					for i, value := range row {
-						if floatValue, err := strconv.ParseFloat(value, 64); err == nil {
-							columns[i].Float = append(columns[i].Float, floatValue)
-							columns[i].DataType = "float"
-						} else {
-							columns[i].String = append(columns[i].String, value)
-						}
+			for row := range rowChannel {
+				for i, value := range row {
+					// Parse value and append to the appropriate column
+					if floatValue, err := strconv.ParseFloat(value, 64); err == nil {
+						columns[i].Float = append(columns[i].Float, floatValue)
+						columns[i].DataType = "float"
+					} else {
+						columns[i].String = append(columns[i].String, value)
 					}
 				}
 			}
 		}()
 	}
 
-	// Get Batch Size from optional input
-	var batchSize int
-	if len(extra) > 0 {
-		batchSize = 100
-	} else {
-		batchSize = extra[0]
-	}
-	batch := make([][]string, 0, batchSize)
+	// Stream rows from the CSV file
 	for {
 		row, err := reader.Read()
 		if err != nil {
-			if len(batch) > 0 {
-				rowChannel <- batch
+			if err.Error() == "EOF" {
+				break // End of file reached
 			}
-			break
+			log.Printf("Error reading row: %v", err)
+			continue
 		}
-		batch = append(batch, row)
-		if len(batch) >= batchSize {
-			rowChannel <- batch
-			batch = make([][]string, 0, batchSize)
-		}
+		rowChannel <- row // Send row for processing
 	}
 	close(rowChannel)
 	wg.Wait()
