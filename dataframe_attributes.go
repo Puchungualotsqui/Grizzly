@@ -23,3 +23,8 @@ func (df *DataFrame) GetShape() [2]int {
 	shape[1] = df.GetLength()
 	return shape
 }
+
+func (df *DataFrame) ContainsColumn(name string) bool {
+	names := df.GetColumnNames()
+	return ArrayContainsString(names, name)
+}

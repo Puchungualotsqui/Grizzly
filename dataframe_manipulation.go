@@ -1,6 +1,9 @@
 package grizzly
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func (df *DataFrame) GetColumnByName(name string) Series {
 	for _, series := range df.Columns {
@@ -73,4 +76,36 @@ func (df *DataFrame) DropByName(name ...string) {
 		}
 	}
 	df.Columns = newSeries
+}
+
+func (df *DataFrame) SplitColumn(columnName, delimiter string, newColumnNames []string) {
+	column := df.GetColumnByName(columnName)
+
+	if column.DataType == "float" {
+		panic("Just for string columns")
+	}
+
+	// Create slices to hold the new column values
+	splitValues := make([][]string, len(newColumnNames))
+	for i := range splitValues {
+		splitValues[i] = make([]string, column.GetLength())
+	}
+
+	for i, value := range column.String {
+		parts := strings.Split(value, delimiter)
+		// Handle cases where there are fewer parts than expected
+		for j := 0; j < len(newColumnNames); j++ {
+			if j < len(parts) {
+				splitValues[j][i] = parts[j]
+			} else {
+				splitValues[j][i] = "" // Fill missing values with an empty string
+			}
+		}
+	}
+	var newColumn Series
+	for j, newName := range newColumnNames {
+		newColumn = NewStringSeries(newName, splitValues[j])
+		df.AddSeries(newColumn)
+	}
+	return
 }
