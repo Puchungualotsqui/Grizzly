@@ -140,3 +140,52 @@ func (df *DataFrame) SplitColumn(columnName, delimiter string, newColumnNames []
 
 	return
 }
+
+func (df *DataFrame) JoinColumns(columnName1, columnName2, delimiter, newColumnName string) {
+	// Retrieve the columns to be joined
+	column1 := df.GetColumnByName(columnName1)
+
+	column2 := df.GetColumnByName(columnName2)
+
+	// Validate that both columns are string columns
+	if column1.DataType != "string" || column2.DataType != "string" {
+		panic("JoinColumns is only supported for string columns")
+	}
+
+	numElements := column1.GetLength()
+	joinedValues := make([]string, numElements)
+
+	// Use goroutines to join columns in parallel for large datasets
+	numGoroutines := runtime.NumCPU()
+	if numGoroutines > numElements {
+		numGoroutines = numElements // Limit the number of goroutines to the number of elements
+	}
+	chunkSize := (numElements + numGoroutines - 1) / numGoroutines
+
+	var wg sync.WaitGroup
+	wg.Add(numGoroutines)
+
+	for g := 0; g < numGoroutines; g++ {
+		start := g * chunkSize
+		end := start + chunkSize
+		if end > numElements {
+			end = numElements
+		}
+
+		go func(start, end int) {
+			defer wg.Done()
+			for i := start; i < end; i++ {
+				joinedValues[i] = column1.String[i] + delimiter + column2.String[i]
+			}
+		}(start, end)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	// Add the new joined column to the DataFrame
+	newColumn := NewStringSeries(newColumnName, joinedValues)
+	df.AddSeries(newColumn)
+
+	return
+}
