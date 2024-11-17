@@ -30,24 +30,22 @@ func (series *Series) FilterFloatSeries(condition func(float64) bool) []int {
 		panic("FilterFloatSeries only works with float series")
 	}
 
-	// Number of Goroutines
-	numGoroutines := runtime.NumCPU()
-	length := series.GetLength()
+	length := len(series.Float) // Ensure length reflects the actual length of the float slice
 	if length == 0 {
 		return nil
 	}
 
+	// Number of goroutines
+	numGoroutines := runtime.NumCPU()
+	chunkSize := (length + numGoroutines - 1) / numGoroutines // Calculate chunk size
+	ch := make(chan []int, numGoroutines)                     // Buffered channel for filtered indexes
 	var wg sync.WaitGroup
-	ch := make(chan []int, numGoroutines)
-
-	// Splitting the work across goroutines
-	chunkSize := (length + numGoroutines - 1) / numGoroutines
 
 	for i := 0; i < numGoroutines; i++ {
 		start := i * chunkSize
-		end := (i + 1) * chunkSize
+		end := start + chunkSize
 		if end > length {
-			end = length
+			end = length // Adjust end index to avoid going out of bounds
 		}
 
 		wg.Add(1)
@@ -59,7 +57,9 @@ func (series *Series) FilterFloatSeries(condition func(float64) bool) []int {
 					localFiltered = append(localFiltered, j)
 				}
 			}
-			ch <- localFiltered
+			if len(localFiltered) > 0 { // Only send non-empty slices to the channel
+				ch <- localFiltered
+			}
 		}(start, end)
 	}
 
@@ -75,7 +75,7 @@ func (series *Series) FilterFloatSeries(condition func(float64) bool) []int {
 		filteredIndexes = append(filteredIndexes, indexes...)
 	}
 
-	series.RemoveIndexes(filteredIndexes)
+	series.RemoveIndexes(filteredIndexes) // Assuming RemoveIndexes correctly removes specified indexes
 	return filteredIndexes
 }
 
