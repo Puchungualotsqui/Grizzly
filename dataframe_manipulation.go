@@ -2,7 +2,9 @@ package grizzly
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
+	"sync"
 )
 
 func (df *DataFrame) GetColumnByName(name string) Series {
@@ -84,28 +86,57 @@ func (df *DataFrame) SplitColumn(columnName, delimiter string, newColumnNames []
 	if column.DataType == "float" {
 		panic("Just for string columns")
 	}
+	if len(newColumnNames) == 0 {
+		panic("No new column names provided")
+	}
+
+	numElements := column.GetLength()
+	numGoroutines := runtime.NumCPU() // Use number of available CPUs for parallelism
+	chunkSize := (numElements + numGoroutines - 1) / numGoroutines
 
 	// Create slices to hold the new column values
 	splitValues := make([][]string, len(newColumnNames))
 	for i := range splitValues {
-		splitValues[i] = make([]string, column.GetLength())
+		splitValues[i] = make([]string, numElements)
 	}
 
-	for i, value := range column.String {
-		parts := strings.Split(value, delimiter)
-		// Handle cases where there are fewer parts than expected
-		for j := 0; j < len(newColumnNames); j++ {
-			if j < len(parts) {
-				splitValues[j][i] = parts[j]
-			} else {
-				splitValues[j][i] = "" // Fill missing values with an empty string
-			}
+	var wg sync.WaitGroup
+
+	// Split the work among goroutines
+	for g := 0; g < numGoroutines; g++ {
+		start := g * chunkSize
+		end := start + chunkSize
+		if end > numElements {
+			end = numElements
 		}
+		if start >= end {
+			break // No more elements to process
+		}
+
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			for i := start; i < end; i++ {
+				parts := strings.Split(column.String[i], delimiter)
+				for j := 0; j < len(newColumnNames); j++ {
+					if j < len(parts) {
+						splitValues[j][i] = parts[j]
+					} else {
+						splitValues[j][i] = "" // Fill missing values with an empty string
+					}
+				}
+			}
+		}(start, end)
 	}
-	var newColumn Series
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+
+	// Add new columns to the DataFrame
 	for j, newName := range newColumnNames {
-		newColumn = NewStringSeries(newName, splitValues[j])
+		newColumn := NewStringSeries(newName, splitValues[j])
 		df.AddSeries(newColumn)
 	}
+
 	return
 }
