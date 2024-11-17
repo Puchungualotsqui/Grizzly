@@ -2,8 +2,10 @@ package grizzly
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 )
 
 type DataFrame struct {
@@ -52,6 +54,32 @@ func (df *DataFrame) AddSeriesForced(series Series, defaultValue string) {
 }
 
 func (df *DataFrame) Print(max int) {
+	// Ensure max does not exceed the length of the DataFrame
+	max = MinInt(df.GetLength(), max)
+
+	// Create a tabwriter for better column alignment
+	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.AlignRight)
+
+	// Print column headers
+	names := df.GetColumnNames()
+	fmt.Fprintln(writer, strings.Join(names, "\t"))
+
+	// Print rows of data
+	for i := 0; i < max; i++ {
+		var output []string
+		// Add column values for this row
+		for _, series := range df.Columns {
+			output = append(output, series.GetValueAsString(i))
+		}
+		// Join and print the row with the tabwriter
+		fmt.Fprintf(writer, "%d\t%s\n", i, strings.Join(output, "\t"))
+	}
+
+	// Flush the writer to ensure output is printed
+	writer.Flush()
+}
+
+func (df *DataFrame) PrintOld(max int) {
 	max = MinInt(df.GetLength(), max)
 	var output []string
 	names := df.GetColumnNames()
