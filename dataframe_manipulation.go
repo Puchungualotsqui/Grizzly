@@ -20,6 +20,7 @@ func (df *DataFrame) FilterFloat(seriesName string, condition func(float64) bool
 			df.Columns[i].RemoveIndexes(indexes)
 		}
 	}
+	return
 }
 
 func (df *DataFrame) FilterString(columnName string, condition func(string) bool) {
@@ -29,6 +30,7 @@ func (df *DataFrame) FilterString(columnName string, condition func(string) bool
 	for i := range df.Columns {
 		df.Columns[i].RemoveIndexes(indexes)
 	}
+	return
 }
 
 func (df *DataFrame) ApplyFloat(columnName string, operation func(float64) float64) {
@@ -66,6 +68,7 @@ func (df *DataFrame) ApplyFloat(columnName string, operation func(float64) float
 
 	// Wait for all goroutines to complete
 	wg.Wait()
+	return
 }
 
 func (df *DataFrame) ApplyString(columnName string, operation func(string) string) {
@@ -103,11 +106,13 @@ func (df *DataFrame) ApplyString(columnName string, operation func(string) strin
 
 	// Wait for all goroutines to complete
 	wg.Wait()
+	return
 }
 
 func (df *DataFrame) ReplaceWholeWord(column, old, new string) {
 	name := df.GetColumnByName(column)
 	name.ReplaceWholeWord(old, new)
+	return
 }
 
 func (df *DataFrame) Replace(column, old, new string) {
@@ -123,6 +128,7 @@ func (df *DataFrame) DropByIndex(index ...int) {
 		}
 	}
 	df.Columns = newSeries
+	return
 }
 
 func (df *DataFrame) DropByName(name ...string) {

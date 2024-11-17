@@ -189,21 +189,21 @@ func (series *Series) ConvertStringToFloat() {
 		series.String = nil // Clear the string slice
 		series.DataType = "float"
 	}
+	return
 }
 
 func (series *Series) ConvertFloatToString() {
 	if series.DataType == "string" {
 		return
 	}
+
 	// Determine the number of goroutines based on available CPUs
 	numGoroutines := runtime.NumCPU()
 	length := len(series.Float)
 	stringArray := make([]string, length)
-	var mu sync.Mutex
 	var wg sync.WaitGroup
-	var firstErr error
 
-	// Calculate chunk size
+	// Calculate chunk size for splitting the work among goroutines
 	chunkSize := (length + numGoroutines - 1) / numGoroutines
 
 	// Launch multiple goroutines
@@ -214,33 +214,22 @@ func (series *Series) ConvertFloatToString() {
 			end = length
 		}
 
-		// Increment the WaitGroup counter
 		wg.Add(1)
-
-		// Process the chunk in a goroutine
 		go func(start, end int) {
 			defer wg.Done()
 			for j := start; j < end; j++ {
-				if firstErr != nil {
-					// Stop if there is an error
-					return
-				}
-				// Convert float to string with desired formatting
-				val := strconv.FormatFloat(series.Float[j], 'f', -1, 64)
-				mu.Lock()
-				stringArray[j] = val
-				mu.Unlock()
+				// Convert float to string and store in the string array
+				stringArray[j] = strconv.FormatFloat(series.Float[j], 'f', -1, 64)
 			}
 		}(start, end)
 	}
 	wg.Wait()
 
-	if firstErr != nil {
-		fmt.Println("Processing stopped due to error: ", firstErr)
-	} else {
-		series.String = stringArray
-		series.Float = []float64{}
-	}
+	// Update the series with the new string data
+	series.String = stringArray
+	series.Float = nil // Clear the float slice
+	series.DataType = "string"
+	return
 }
 
 func (series *Series) ReplaceWholeWord(old, new string) {
@@ -274,6 +263,7 @@ func (series *Series) ReplaceWholeWord(old, new string) {
 		}(start, end)
 	}
 	wg.Wait() // Wait for all goroutines to complete
+	return
 }
 
 func (series *Series) Replace(old, new string) {
@@ -300,4 +290,5 @@ func (series *Series) Replace(old, new string) {
 		}(start, end)
 	}
 	wg.Wait() // Wait for all goroutines to complete
+	return
 }
