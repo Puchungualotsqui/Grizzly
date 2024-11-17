@@ -58,7 +58,7 @@ func (df *DataFrame) Print(max int) {
 	max = MinInt(df.GetLength(), max)
 
 	// Create a tabwriter for better column alignment
-	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.AlignRight)
+	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 
 	// Add "Index" as the first header
 	names := df.GetColumnNames()
