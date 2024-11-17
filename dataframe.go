@@ -53,7 +53,7 @@ func (df *DataFrame) AddSeriesForced(series Series, defaultValue string) {
 	df.FixShape(defaultValue)
 }
 
-func (df *DataFrame) Print(max int) {
+func (df *DataFrame) Print(min int, max int) {
 	// Ensure max does not exceed the length of the DataFrame
 	max = MinInt(df.GetLength(), max)
 
@@ -66,7 +66,7 @@ func (df *DataFrame) Print(max int) {
 	fmt.Fprintln(writer, strings.Join(headers, "\t"))
 
 	// Print rows of data
-	for i := 0; i < max; i++ {
+	for i := min; i < max; i++ {
 		var output []string
 		// Add the row index as the first element
 		output = append(output, strconv.Itoa(i))
@@ -80,6 +80,14 @@ func (df *DataFrame) Print(max int) {
 
 	// Flush the writer to ensure output is printed
 	writer.Flush()
+}
+
+func (df *DataFrame) PrintHead(max int) {
+	df.Print(0, max)
+}
+
+func (df *DataFrame) PrintTail(max int) {
+	df.Print(max, df.GetLength())
 }
 
 func (df *DataFrame) PrintOld(max int) {
