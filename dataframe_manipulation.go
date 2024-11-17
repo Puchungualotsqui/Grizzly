@@ -22,18 +22,28 @@ func (df *DataFrame) FilterFloat(seriesName string, condition func(float64) bool
 	}
 }
 
-func (df *DataFrame) FilterString(seriesName string, condition func(string) bool) {
+func (df *DataFrame) FilterString(columnName string, condition func(string) bool) {
 	// Verify if series exists
-	series := df.GetColumnByName(seriesName)
-	if series.Name == "" {
-		fmt.Println("Column not found")
-	} else if series.DataType != "string" {
-		fmt.Println("Not a string")
-	} else {
-		indexes := series.FilterStringSeries(condition)
-		for i := range df.Columns {
-			df.Columns[i].RemoveIndexes(indexes)
-		}
+	series := df.GetColumnByName(columnName)
+	indexes := series.FilterStringSeries(condition)
+	for i := range df.Columns {
+		df.Columns[i].RemoveIndexes(indexes)
+	}
+}
+
+func (df *DataFrame) ApplyFloat(columnName string, operation func(float64) float64) {
+	// Verify if series exists
+	series := df.GetColumnByName(columnName)
+	for i, value := range series.Float {
+		series.Float[i] = operation(value)
+	}
+}
+
+func (df *DataFrame) ApplyString(columnName string, operation func(string) string) {
+	// Verify if series exists
+	series := df.GetColumnByName(columnName)
+	for i, value := range series.String {
+		series.String[i] = operation(value)
 	}
 }
 
