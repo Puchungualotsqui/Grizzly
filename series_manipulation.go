@@ -141,7 +141,6 @@ func (series *Series) ConvertStringToFloat() {
 	numGoroutines := runtime.NumCPU()
 	length := len(series.String)
 	floatArray := make([]float64, length)
-	var mu sync.Mutex
 	var wg sync.WaitGroup
 	var once sync.Once
 	var firstErr error
@@ -157,37 +156,38 @@ func (series *Series) ConvertStringToFloat() {
 			end = length
 		}
 
-		// Increment the WaitGroup counter
 		wg.Add(1)
 
 		// Process the chunk in a goroutine
 		go func(start, end int) {
 			defer wg.Done()
 			for j := start; j < end; j++ {
+				// Stop if an error has already occurred
 				if firstErr != nil {
-					// Stop if there is an error
 					return
 				}
+
+				// Try to convert the string to a float
 				val, err := strconv.ParseFloat(series.String[j], 64)
 				if err != nil {
 					once.Do(func() {
 						firstErr = err
 					})
-					return
+					return // Stop processing this goroutine
 				}
-				mu.Lock()
 				floatArray[j] = val
-				mu.Unlock()
 			}
 		}(start, end)
 	}
 	wg.Wait()
 
+	// Check if an error occurred during conversion
 	if firstErr != nil {
 		fmt.Println("Processing stopped due to error: ", firstErr)
 	} else {
 		series.Float = floatArray
-		series.String = []string{}
+		series.String = nil // Clear the string slice
+		series.DataType = "float"
 	}
 }
 
