@@ -133,6 +133,23 @@ func (df *DataFrame) DropByName(name ...string) {
 		}
 	}
 	df.Columns = newSeries
+	return
+}
+
+func (df *DataFrame) ConvertStringToFloat(names ...string) {
+	for _, name := range names {
+		series := df.GetColumnByName(name)
+		series.ConvertStringToFloat()
+	}
+	return
+}
+
+func (df *DataFrame) ConvertFloatToString(names ...string) {
+	for _, name := range names {
+		series := df.GetColumnByName(name)
+		series.ConvertFloatToString()
+	}
+	return
 }
 
 func (df *DataFrame) SplitColumn(columnName, delimiter string, newColumnNames []string) {
