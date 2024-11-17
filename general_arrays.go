@@ -8,52 +8,19 @@ import (
 	"sync"
 )
 
-func ArrayCountWord(words []string, word string) int {
-	numGoroutines := runtime.NumCPU() // Use the number of available CPU cores
-	length := len(words)
-	if length == 0 {
-		return 0
-	}
-
-	chunkSize := (length + numGoroutines - 1) / numGoroutines
-	var wg sync.WaitGroup
-	countChan := make(chan int, numGoroutines) // Buffered channel to collect counts
-
-	// Launch goroutines to count empty strings in chunks
-	for i := 0; i < numGoroutines; i++ {
-		start := i * chunkSize
-		end := start + chunkSize
-		if end > length {
-			end = length
+func ArrayCountWord(data []string, word string) float64 {
+	chain := ArrayStringBase(0, data, func(info string, result float64) float64 {
+		if info == word {
+			result++
 		}
+		return result
+	})
+	var result float64
 
-		wg.Add(1)
-		go func(start, end int) {
-			defer wg.Done()
-			count := 0
-			for j := start; j < end; j++ {
-				if words[j] == word {
-					count++
-				}
-			}
-			countChan <- count // Send the count to the channel
-		}(start, end)
+	for val := range chain {
+		result += val
 	}
-
-	// Close the channel once all goroutines have finished
-	go func() {
-		wg.Wait()
-		close(countChan)
-	}()
-
-	// Collect the counts from all goroutines
-	totalCount := 0
-	for count := range countChan {
-		totalCount += count
-	}
-
-	return totalCount
-
+	return result
 }
 
 func ParallelSort(arr []float64) []float64 {
@@ -126,9 +93,14 @@ func Merge(left, right []float64) []float64 {
 
 func ArrayCountStringDuplicates(elements []string) map[string]int {
 	numCPU := runtime.NumCPU()
-	chunkSize := (len(elements) + numCPU - 1) / numCPU // Calculate chunk size for splitting work
-	duplicateCounts := make(map[string]int)
-	var mu sync.Mutex
+	length := len(elements)
+	if length == 0 {
+		return nil // Handle empty input
+	}
+
+	// Calculate chunk size for splitting work
+	chunkSize := (length + numCPU - 1) / numCPU
+	resultChan := make(chan map[string]int, numCPU)
 	var wg sync.WaitGroup
 
 	// Worker function to count duplicates in a subset of elements
@@ -138,47 +110,55 @@ func ArrayCountStringDuplicates(elements []string) map[string]int {
 		for _, element := range subset {
 			localCounts[element]++
 		}
-		// Safely merge localCounts into the global map
-		mu.Lock()
-		for key, count := range localCounts {
-			duplicateCounts[key] += count
-		}
-		mu.Unlock()
+		resultChan <- localCounts // Send local result to the channel
 	}
 
 	// Start goroutines to process chunks of the array
-	for i := 0; i < numCPU; i++ {
+	for i := 0; i < numCPU && i*chunkSize < length; i++ {
 		start := i * chunkSize
 		end := start + chunkSize
-		if start >= len(elements) {
-			break // Prevent out-of-bound access if start index is beyond the length
-		}
-		if end > len(elements) {
-			end = len(elements) // Adjust end index to the length of the array
+		if end > length {
+			end = length
 		}
 		wg.Add(1)
 		go countDuplicates(elements[start:end])
 	}
 
-	// Wait for all goroutines to finish
-	wg.Wait()
+	// Close the channel once all workers are done
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
 
-	// Filter results to retain only elements with counts greater than 1
-	result := make(map[string]int)
-	for key, count := range duplicateCounts {
-		if count > 1 {
-			result[key] = count
+	// Merge results from all goroutines
+	combinedCounts := make(map[string]int)
+	for localCounts := range resultChan {
+		for key, count := range localCounts {
+			combinedCounts[key] += count
 		}
 	}
 
-	return result
+	// Filter results to retain only elements with counts greater than 1
+	finalResult := make(map[string]int)
+	for key, count := range combinedCounts {
+		if count > 1 {
+			finalResult[key] = count
+		}
+	}
+
+	return finalResult
 }
 
 func ArrayCountFloatDuplicates(elements []float64) map[float64]int {
 	numCPU := runtime.NumCPU()
-	chunkSize := (len(elements) + numCPU - 1) / numCPU // Calculate chunk size for splitting work
-	duplicateCounts := make(map[float64]int)
-	var mu sync.Mutex
+	length := len(elements)
+	if length == 0 {
+		return nil // Handle empty input
+	}
+
+	// Calculate chunk size for splitting work
+	chunkSize := (length + numCPU - 1) / numCPU
+	resultChan := make(chan map[float64]int, numCPU)
 	var wg sync.WaitGroup
 
 	// Worker function to count duplicates in a subset of elements
@@ -188,40 +168,43 @@ func ArrayCountFloatDuplicates(elements []float64) map[float64]int {
 		for _, element := range subset {
 			localCounts[element]++
 		}
-		// Safely merge localCounts into the global map
-		mu.Lock()
-		for key, count := range localCounts {
-			duplicateCounts[key] += count
-		}
-		mu.Unlock()
+		resultChan <- localCounts // Send local result to the channel
 	}
 
 	// Start goroutines to process chunks of the array
-	for i := 0; i < numCPU; i++ {
+	for i := 0; i < numCPU && i*chunkSize < length; i++ {
 		start := i * chunkSize
 		end := start + chunkSize
-		if start >= len(elements) {
-			break // Prevent out-of-bound access if start index is beyond the length
-		}
-		if end > len(elements) {
-			end = len(elements) // Adjust end index to the length of the array
+		if end > length {
+			end = length
 		}
 		wg.Add(1)
 		go countDuplicates(elements[start:end])
 	}
 
-	// Wait for all goroutines to finish
-	wg.Wait()
+	// Close the channel once all workers are done
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
 
-	// Filter results to retain only elements with counts greater than 1
-	result := make(map[float64]int)
-	for key, count := range duplicateCounts {
-		if count > 1 {
-			result[key] = count
+	// Merge results from all goroutines
+	combinedCounts := make(map[float64]int)
+	for localCounts := range resultChan {
+		for key, count := range localCounts {
+			combinedCounts[key] += count
 		}
 	}
 
-	return result
+	// Filter results to retain only elements with counts greater than 1
+	finalResult := make(map[float64]int)
+	for key, count := range combinedCounts {
+		if count > 1 {
+			finalResult[key] = count
+		}
+	}
+
+	return finalResult
 }
 
 func ArrayContainsInteger(arr []int, target int) bool {
