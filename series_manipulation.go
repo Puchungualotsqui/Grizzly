@@ -82,7 +82,7 @@ func (series *Series) FilterFloatSeries(condition func(float64) bool) []int {
 		filteredIndexes = append(filteredIndexes, indexes...)
 	}
 
-	series.RemoveIndexes(filteredIndexes) // Ensure RemoveIndexes is properly implemented
+	//series.RemoveIndexes(filteredIndexes) // Ensure RemoveIndexes is properly implemented
 	return filteredIndexes
 }
 
@@ -136,7 +136,7 @@ func (series *Series) FilterStringSeries(condition func(string) bool) []int {
 		filteredIndexes = append(filteredIndexes, indexes...)
 	}
 
-	series.RemoveIndexes(filteredIndexes)
+	//series.RemoveIndexes(filteredIndexes)
 	return filteredIndexes
 }
 
