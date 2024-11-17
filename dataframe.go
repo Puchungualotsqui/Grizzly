@@ -34,12 +34,11 @@ func (df *DataFrame) AddSeries(series Series) {
 		return
 	}
 	if series.GetLength() != df.GetLength() {
-		fmt.Println("ERROR: Cannot add a series with different length")
+		panic("ERROR: Cannot add a series with different length")
 	} else if IsNameRepeated(df.Columns, series.Name) {
-		fmt.Println("ERROR: Cannot add a series with repeat names")
-	} else {
-		df.Columns = append(df.Columns, series)
+		panic("ERROR: Cannot add a series with repeat names")
 	}
+	df.Columns = append(df.Columns, series)
 	return
 }
 
