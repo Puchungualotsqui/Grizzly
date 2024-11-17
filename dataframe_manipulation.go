@@ -7,19 +7,6 @@ import (
 	"sync"
 )
 
-func (df *DataFrame) GetColumnByName(name string) Series {
-	for _, series := range df.Columns {
-		if series.Name == name {
-			return series
-		}
-	}
-	panic(fmt.Sprintf("%s not found", name))
-}
-
-func (df *DataFrame) GetColumnByIndex(index int) Series {
-	return df.Columns[index]
-}
-
 func (df *DataFrame) FilterFloat(seriesName string, condition func(float64) bool) {
 	// Verify if series exists
 	series := df.GetColumnByName(seriesName)
