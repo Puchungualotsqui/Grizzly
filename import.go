@@ -2,76 +2,75 @@ package grizzly
 
 import (
 	"encoding/csv"
-	"log"
 	"os"
 	"runtime"
 	"strconv"
 	"sync"
 )
 
-// ImportCSV reads a CSV file using streaming processing and creates a DataFrame with optimized performance
+// ImportCSV reads a CSV file and creates a DataFrame with dynamic parallelism based on the number of CPUs
 func ImportCSV(filepath string) DataFrame {
 	file, err := os.Open(filepath)
 	if err != nil {
-		log.Fatalf("Failed to open file: %v", err)
+		panic("File was not found")
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	headers, err := reader.Read()
+	records, err := reader.ReadAll()
 	if err != nil {
-		log.Fatalf("Error reading CSV headers: %v", err)
+		panic("Error reading CSV file")
 	}
-	numCols := len(headers)
 
-	// Initialize Series for each column with empty data
+	if len(records) == 0 {
+		return DataFrame{}
+	}
+
+	headers := records[0]
+	numCols := len(headers)
+	numRows := len(records) - 1 // Exclude header row
 	columns := make([]Series, numCols)
+
+	// Initialize Series for each header
 	for i, header := range headers {
 		columns[i] = Series{
 			Name:     header,
-			DataType: "string",
-			String:   []string{},
-			Float:    []float64{},
+			DataType: "string",                   // Default type
+			String:   make([]string, 0, numRows), // Preallocate memory
+			Float:    make([]float64, 0, numRows),
 		}
 	}
 
-	// Determine the number of goroutines for parallel processing
+	// Determine the number of goroutines based on available CPUs
 	numGoroutines := runtime.NumCPU()
-	rowChannel := make(chan []string, numGoroutines*2) // Buffered channel for rows
-	var wg sync.WaitGroup
+	chunkSize := (numCols + numGoroutines - 1) / numGoroutines
 
-	// Launch goroutines to process rows
+	var wg sync.WaitGroup
+	wg.Add(numGoroutines)
+
 	for g := 0; g < numGoroutines; g++ {
-		wg.Add(1)
-		go func() {
+		start := g * chunkSize
+		end := start + chunkSize
+		if end > numCols {
+			end = numCols
+		}
+
+		go func(start, end int) {
 			defer wg.Done()
-			for row := range rowChannel {
-				for i, value := range row {
-					// Parse value and append to the appropriate column
+			for colIndex := start; colIndex < end; colIndex++ {
+				for _, row := range records[1:] {
+					value := row[colIndex]
+					// Attempt to parse as float
 					if floatValue, err := strconv.ParseFloat(value, 64); err == nil {
-						columns[i].Float = append(columns[i].Float, floatValue)
-						columns[i].DataType = "float"
+						columns[colIndex].Float = append(columns[colIndex].Float, floatValue)
+						columns[colIndex].DataType = "float"
 					} else {
-						columns[i].String = append(columns[i].String, value)
+						columns[colIndex].String = append(columns[colIndex].String, value)
 					}
 				}
 			}
-		}()
+		}(start, end)
 	}
-
-	// Stream rows from the CSV file
-	for {
-		row, err := reader.Read()
-		if err != nil {
-			if err.Error() == "EOF" {
-				break // End of file reached
-			}
-			log.Printf("Error reading row: %v", err)
-			continue
-		}
-		rowChannel <- row // Send row for processing
-	}
-	close(rowChannel)
 	wg.Wait()
 
 	return DataFrame{Columns: columns}
