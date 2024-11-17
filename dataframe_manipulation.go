@@ -32,19 +32,77 @@ func (df *DataFrame) FilterString(columnName string, condition func(string) bool
 }
 
 func (df *DataFrame) ApplyFloat(columnName string, operation func(float64) float64) {
-	// Verify if series exists
+	// Retrieve the series
 	series := df.GetColumnByName(columnName)
-	for i, value := range series.Float {
-		series.Float[i] = operation(value)
+
+	// Get the length of the data
+	numElements := len(series.Float)
+	if numElements == 0 {
+		return
 	}
+
+	// Determine the number of goroutines based on available CPUs
+	numGoroutines := runtime.NumCPU()
+	chunkSize := (numElements + numGoroutines - 1) / numGoroutines
+
+	var wg sync.WaitGroup
+	wg.Add(numGoroutines)
+
+	// Process chunks in parallel
+	for g := 0; g < numGoroutines; g++ {
+		start := g * chunkSize
+		end := start + chunkSize
+		if end > numElements {
+			end = numElements
+		}
+
+		go func(start, end int) {
+			defer wg.Done()
+			for i := start; i < end; i++ {
+				series.Float[i] = operation(series.Float[i])
+			}
+		}(start, end)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
 }
 
 func (df *DataFrame) ApplyString(columnName string, operation func(string) string) {
-	// Verify if series exists
+	// Retrieve the series
 	series := df.GetColumnByName(columnName)
-	for i, value := range series.String {
-		series.String[i] = operation(value)
+
+	// Get the length of the data
+	numElements := len(series.String)
+	if numElements == 0 {
+		return
 	}
+
+	// Determine the number of goroutines based on available CPUs
+	numGoroutines := runtime.NumCPU()
+	chunkSize := (numElements + numGoroutines - 1) / numGoroutines
+
+	var wg sync.WaitGroup
+	wg.Add(numGoroutines)
+
+	// Process chunks in parallel
+	for g := 0; g < numGoroutines; g++ {
+		start := g * chunkSize
+		end := start + chunkSize
+		if end > numElements {
+			end = numElements
+		}
+
+		go func(start, end int) {
+			defer wg.Done()
+			for i := start; i < end; i++ {
+				series.String[i] = operation(series.String[i])
+			}
+		}(start, end)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
 }
 
 func (df *DataFrame) ReplaceWholeWord(column, old, new string) {
