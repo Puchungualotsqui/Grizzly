@@ -8,8 +8,7 @@ import (
 	"sync"
 )
 
-// ImportCSV reads a CSV file and creates a DataFrame with dynamic parallelism based on the number of CPUs
-func ImportCSV(filepath string) DataFrame {
+func ImportCSV(filepath string, extra ...int) DataFrame {
 	file, err := os.Open(filepath)
 	if err != nil {
 		panic("File was not found")
@@ -17,60 +16,68 @@ func ImportCSV(filepath string) DataFrame {
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
+	headers, err := reader.Read()
 	if err != nil {
-		panic("Error reading CSV file")
+		panic("Error reading CSV headers")
 	}
-
-	if len(records) == 0 {
-		return DataFrame{}
-	}
-
-	headers := records[0]
 	numCols := len(headers)
-	numRows := len(records) - 1 // Exclude header row
-	columns := make([]Series, numCols)
 
-	// Initialize Series for each header
+	columns := make([]Series, numCols)
 	for i, header := range headers {
 		columns[i] = Series{
 			Name:     header,
-			DataType: "string",                   // Default type
-			String:   make([]string, 0, numRows), // Preallocate memory
-			Float:    make([]float64, 0, numRows),
+			DataType: "string",
+			String:   make([]string, 0, 1000),
+			Float:    make([]float64, 0, 1000),
 		}
 	}
 
-	// Determine the number of goroutines based on available CPUs
 	numGoroutines := runtime.NumCPU()
-	chunkSize := (numCols + numGoroutines - 1) / numGoroutines
-
+	rowChannel := make(chan [][]string, numGoroutines*2)
 	var wg sync.WaitGroup
-	wg.Add(numGoroutines)
 
 	for g := 0; g < numGoroutines; g++ {
-		start := g * chunkSize
-		end := start + chunkSize
-		if end > numCols {
-			end = numCols
-		}
-
-		go func(start, end int) {
+		wg.Add(1)
+		go func() {
 			defer wg.Done()
-			for colIndex := start; colIndex < end; colIndex++ {
-				for _, row := range records[1:] {
-					value := row[colIndex]
-					// Attempt to parse as float
-					if floatValue, err := strconv.ParseFloat(value, 64); err == nil {
-						columns[colIndex].Float = append(columns[colIndex].Float, floatValue)
-						columns[colIndex].DataType = "float"
-					} else {
-						columns[colIndex].String = append(columns[colIndex].String, value)
+			for rows := range rowChannel {
+				for _, row := range rows {
+					for i, value := range row {
+						if floatValue, err := strconv.ParseFloat(value, 64); err == nil {
+							columns[i].Float = append(columns[i].Float, floatValue)
+							columns[i].DataType = "float"
+						} else {
+							columns[i].String = append(columns[i].String, value)
+						}
 					}
 				}
 			}
-		}(start, end)
+		}()
 	}
+
+	// Get Batch Size from optional input
+	var batchSize int
+	if len(extra) > 0 {
+		batchSize = 100
+	} else {
+		batchSize = extra[0]
+	}
+	batch := make([][]string, 0, batchSize)
+	for {
+		row, err := reader.Read()
+		if err != nil {
+			if len(batch) > 0 {
+				rowChannel <- batch
+			}
+			break
+		}
+		batch = append(batch, row)
+		if len(batch) >= batchSize {
+			rowChannel <- batch
+			batch = make([][]string, 0, batchSize)
+		}
+	}
+	close(rowChannel)
 	wg.Wait()
 
 	return DataFrame{Columns: columns}
