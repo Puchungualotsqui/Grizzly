@@ -1,6 +1,6 @@
 package grizzly
 
-func (series *Series) CountWord(word string) int {
+func (series *Series) CountWord(word string) float64 {
 	if series.DataType == "float" {
 		return 0
 	} else {
