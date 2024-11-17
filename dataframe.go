@@ -60,19 +60,22 @@ func (df *DataFrame) Print(max int) {
 	// Create a tabwriter for better column alignment
 	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.AlignRight)
 
-	// Print column headers
+	// Add "Index" as the first header
 	names := df.GetColumnNames()
-	fmt.Fprintln(writer, strings.Join(names, "\t"))
+	headers := append([]string{"Index"}, names...)
+	fmt.Fprintln(writer, strings.Join(headers, "\t"))
 
 	// Print rows of data
 	for i := 0; i < max; i++ {
 		var output []string
+		// Add the row index as the first element
+		output = append(output, strconv.Itoa(i))
 		// Add column values for this row
 		for _, series := range df.Columns {
 			output = append(output, series.GetValueAsString(i))
 		}
 		// Join and print the row with the tabwriter
-		fmt.Fprintf(writer, "%d\t%s\n", i, strings.Join(output, "\t"))
+		fmt.Fprintln(writer, strings.Join(output, "\t"))
 	}
 
 	// Flush the writer to ensure output is printed
