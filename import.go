@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-// ImportCSV reads a CSV file and creates a DataFrame with dynamic parallelism based on the number of CPUs
+// ImportCSV reads a CSV file and creates a DataFrame with consistent column lengths
 func ImportCSV(filepath string) DataFrame {
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -59,6 +59,11 @@ func ImportCSV(filepath string) DataFrame {
 			defer wg.Done()
 			for colIndex := start; colIndex < end; colIndex++ {
 				for _, row := range records[1:] {
+					// Handle rows with fewer columns by padding with an empty string
+					if colIndex >= len(row) {
+						columns[colIndex].String = append(columns[colIndex].String, "")
+						continue
+					}
 					value := row[colIndex]
 					// Attempt to parse as float
 					if floatValue, err := strconv.ParseFloat(value, 64); err == nil {
@@ -72,6 +77,20 @@ func ImportCSV(filepath string) DataFrame {
 		}(start, end)
 	}
 	wg.Wait()
+
+	// Ensure all columns have consistent lengths
+	for i := range columns {
+		if len(columns[i].String) > 0 && len(columns[i].String) < numRows {
+			for len(columns[i].String) < numRows {
+				columns[i].String = append(columns[i].String, "") // Pad with empty string
+			}
+		}
+		if len(columns[i].Float) > 0 && len(columns[i].Float) < numRows {
+			for len(columns[i].Float) < numRows {
+				columns[i].Float = append(columns[i].Float, 0.0) // Pad with zero float value
+			}
+		}
+	}
 
 	return DataFrame{Columns: columns}
 }
