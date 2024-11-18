@@ -44,12 +44,22 @@ func (series *Series) FilterFloatSeries(condition func(float64) bool) []int {
 	for i := 0; i < numGoroutines; i++ {
 		start := i * chunkSize
 		end := start + chunkSize
+		if start >= length {
+			break // Ensure we don't start beyond the slice length
+		}
+		if end > length {
+			end = length // Adjust end index to stay within bounds
+		}
 
 		wg.Add(1)
 		go func(start, end int) {
 			defer wg.Done()
 			var localFiltered []int
 			for j := start; j < end; j++ {
+				if j >= length {
+					// Double-check bounds to prevent any unexpected issues
+					break
+				}
 				if condition(series.Float[j]) {
 					localFiltered = append(localFiltered, j)
 				}
