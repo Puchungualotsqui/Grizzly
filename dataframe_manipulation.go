@@ -467,3 +467,67 @@ func (df *DataFrame) DuplicateColumn(names ...string) {
 	}
 	return
 }
+
+func (df *DataFrame) MathBase(columnName1, columnName2, newColumnName string, operation func(float64, float64) float64) {
+	var newColumn Series
+	series1 := df.GetColumnByName(columnName1)
+	series2 := df.GetColumnByName(columnName2)
+	if !(series1.DataType == "float") || !(series2.DataType == "float") {
+		panic("Math operation can just be done with float columns.")
+	}
+	size := series1.GetLength()
+	if size == 0 {
+		return
+	}
+	newColumn = Series{
+		Name:     newColumnName,
+		DataType: "string",          // Default type
+		String:   make([]string, 0), // Preallocate with length
+		Float:    make([]float64, size),
+	}
+
+	numGoroutines := runtime.NumCPU()
+	chunkSize := (size + numGoroutines - 1) / numGoroutines
+
+	var wg sync.WaitGroup
+
+	for g := 0; g < numGoroutines; g++ {
+		start := g * chunkSize
+		end := start + chunkSize
+		if start >= size {
+			break // Ensure we don't start beyond the slice length
+		}
+		if end > size {
+			end = size // Adjust end index for the last chunk
+		}
+
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			for j := start; j < end; j++ {
+				newColumn.Float[j] = operation(series1.Float[j], series2.Float[j])
+			}
+		}(start, end)
+	}
+
+	wg.Wait()
+
+	df.AddSeries(newColumn)
+	return
+}
+
+func (df *DataFrame) Sum(columnName1, columnName2, newColumnName string) {
+	df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x + y })
+}
+
+func (df *DataFrame) Subtraction(columnName1, columnName2, newColumnName string) {
+	df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x - y })
+}
+
+func (df *DataFrame) Multiplication(columnName1, columnName2, newColumnName string) {
+	df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x * y })
+}
+
+func (df *DataFrame) Division(columnName1, columnName2, newColumnName string) {
+	df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x / y })
+}
