@@ -2,24 +2,24 @@ package grizzly
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 	"runtime"
 	"strconv"
 	"sync"
 )
 
-// ImportCSV reads a CSV file and creates a DataFrame with consistent column lengths
 func ImportCSV(filepath string) DataFrame {
 	file, err := os.Open(filepath)
 	if err != nil {
-		panic("File was not found")
+		panic(fmt.Sprintf("Failed to open file: %v", err))
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	if err != nil {
-		panic("Error reading CSV file")
+		panic(fmt.Sprintf("Failed to read CSV file: %v", err))
 	}
 
 	size := len(records)
@@ -37,11 +37,12 @@ func ImportCSV(filepath string) DataFrame {
 	for i, header := range headers {
 		columns[i] = Series{
 			Name:     header,
-			DataType: "string",                   // Default type
-			String:   make([]string, 0, numRows), // Preallocate memory
-			Float:    make([]float64, 0, numRows),
+			DataType: "string",                // Default type
+			String:   make([]string, numRows), // Preallocate with length
+			Float:    make([]float64, numRows),
 		}
 	}
+
 	var result DataFrame
 
 	// Determine the number of goroutines based on available CPUs
@@ -50,8 +51,8 @@ func ImportCSV(filepath string) DataFrame {
 
 	var wg sync.WaitGroup
 
-	for i := 0; i < numGoroutines; i++ {
-		start := i * chunkSize
+	for g := 0; g < numGoroutines; g++ {
+		start := g * chunkSize
 		end := start + chunkSize
 		if start >= numRows {
 			break // Ensure we don't start beyond the slice length
@@ -64,21 +65,14 @@ func ImportCSV(filepath string) DataFrame {
 		go func(start, end int) {
 			defer wg.Done()
 			for j := start; j < end; j++ {
-				for i, _ := range columns {
+				for i := range columns {
 					columns[i].String[j] = rows[j][i]
 				}
 			}
 		}(start, end)
 	}
 
-	// Closing channel after all goroutines finish
-	go func() {
-		wg.Wait()
-	}()
-
-	for i, _ := range columns {
-		columns[i].ConvertStringToFloat()
-	}
+	wg.Wait()
 
 	result.Columns = columns
 	result.FixShape("")
