@@ -305,5 +305,21 @@ df.SliceColumnsByIndex(5,2)
 ```
 ### MergeDataFrame
 Add the columns of the other dataframe.
-- otherDf *DataFrame*: the new columns will extract from it.
+- otherDf *DataFrame*: the new columns will be extracted from it.
 - defaultValue *string*: default value for empty values.
+```
+df.MergeDataFrame(otherDF, "None")
+```
+### Concatenate
+Add the new columns of the other dataframe.
+- otherDf *DataFrame*: the new rows will be extracted from it.
+- defaultValue *string*: default value for empty values.
+```
+df.Concatenate(otherDF, "None")
+```
+### DuplicateColumn
+Create a copy of a column.
+- names *...string*: names of the columns to duplicate.
+```
+df.DuplicateColumn("names","street")
+```
