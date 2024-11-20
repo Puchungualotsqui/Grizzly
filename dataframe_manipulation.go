@@ -7,7 +7,64 @@ import (
 	"sync"
 )
 
-func (df *DataFrame) FilterFloat(seriesName string, condition func(float64) bool) {
+func (df *DataFrame) FilterFloat(seriesName string, condition func(float65 float64) bool) {
+	var series *Series
+	series = df.GetColumnByName(seriesName)
+
+	if series.DataType != "float" {
+		panic("FilterFloatSeries only works with float series")
+	}
+
+	length := len(series.Float) // Use the actual length of the float slice
+	if length == 0 {
+		return
+	}
+
+	// Determine number of goroutines
+	numGoroutines := runtime.NumCPU()
+	chunkSize := (length + numGoroutines - 1) / numGoroutines // Calculate chunk size
+	ch := make(chan []int, numGoroutines)                     // Buffered channel for filtered indexes
+	var wg sync.WaitGroup
+
+	for i := 0; i < numGoroutines; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		if start >= length {
+			break // Ensure we don't start beyond the slice length
+		}
+		if end > length {
+			end = length // Adjust end index to stay within bounds
+		}
+
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			for j := start; j < end; j++ {
+				if j >= length {
+					// Double-check bounds to prevent any unexpected issues
+					break
+				}
+				if condition(series.Float[j]) {
+					for i, column := range df.Columns {
+						if column.DataType == "float" {
+							df.Columns[i].Float = append(column.Float[:j], column.Float[j+1:]...)
+						} else {
+							df.Columns[i].String = append(column.String[:j], column.String[j+1:]...)
+						}
+					}
+				}
+			}
+		}(start, end)
+	}
+
+	// Closing channel after all goroutines finish
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+}
+
+func (df *DataFrame) FilterFloatOld(seriesName string, condition func(float64) bool) {
 	// Verify if series exists
 	series := df.GetColumnByName(seriesName)
 	if series.Name == "" {
@@ -15,7 +72,7 @@ func (df *DataFrame) FilterFloat(seriesName string, condition func(float64) bool
 	} else if series.DataType != "float" {
 		fmt.Println("Not a float")
 	} else {
-		indexes := series.FilterFloatSeries(condition)
+		indexes := series.FilterFloatSeriesOld(condition)
 		for i := range df.Columns {
 			df.Columns[i].RemoveIndexes(indexes)
 		}

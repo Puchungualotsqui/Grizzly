@@ -57,7 +57,55 @@ func (series *Series) RemoveIndexesOld(indexes []int) {
 	}
 }
 
-func (series *Series) FilterFloatSeries(condition func(float64) bool) []int {
+func (series *Series) FilterFloatSeries(condition func(float64) bool) {
+	if series.DataType != "float" {
+		panic("FilterFloatSeries only works with float series")
+	}
+
+	length := len(series.Float) // Use the actual length of the float slice
+	if length == 0 {
+		return
+	}
+
+	// Determine number of goroutines
+	numGoroutines := runtime.NumCPU()
+	chunkSize := (length + numGoroutines - 1) / numGoroutines // Calculate chunk size
+	ch := make(chan []int, numGoroutines)                     // Buffered channel for filtered indexes
+	var wg sync.WaitGroup
+
+	for i := 0; i < numGoroutines; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		if start >= length {
+			break // Ensure we don't start beyond the slice length
+		}
+		if end > length {
+			end = length // Adjust end index to stay within bounds
+		}
+
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			for j := start; j < end; j++ {
+				if j >= length {
+					// Double-check bounds to prevent any unexpected issues
+					break
+				}
+				if condition(series.Float[j]) {
+					return
+				}
+			}
+		}(start, end)
+	}
+
+	// Closing channel after all goroutines finish
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+}
+
+func (series *Series) FilterFloatSeriesOld(condition func(float64) bool) []int {
 	if series.DataType != "float" {
 		panic("FilterFloatSeries only works with float series")
 	}
