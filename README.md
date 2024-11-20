@@ -1,6 +1,5 @@
 # Go DataFrame Library
-An alternative to Python's Pandas library, this package provides efficient data manipulation and aggregation capabilities tailored for Go developers. The library focuses on DataFrame operations with support for series operations as backend functionalities.
-![image](https://github.com/user-attachments/assets/8e8ed677-ee0c-4c13-9cf0-b6c48b009da6)
+An alternative to Python's Pandas library, this package provides efficient data manipulation and aggregation capabilities tailored for Go developers. The library focuses on DataFrame operations with support for series operations as backend functionalities. ![image](https://github.com/user-attachments/assets/8e8ed677-ee0c-4c13-9cf0-b6c48b009da6)
 
 
 ### Features
