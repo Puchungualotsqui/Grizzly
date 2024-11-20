@@ -267,3 +267,39 @@ func (df *DataFrame) JoinColumns(columnName1, columnName2, delimiter, newColumnN
 
 	return
 }
+
+func (df *DataFrame) Slice(offset int, length int) *DataFrame {
+	// Ensure offset is within bounds
+	if offset < 0 || offset >= len(df.Columns[0].Float) {
+		panic("offset out of range")
+	}
+
+	// Ensure length is within bounds
+	if offset+length > len(df.Columns[0].Float) {
+		length = len(df.Columns[0].Float) - offset // Adjust length to max available range
+	}
+
+	// Create a new DataFrame to hold the sliced data
+	newDf := &DataFrame{
+		Columns: make([]Series, len(df.Columns)),
+	}
+
+	// Iterate over each Series to slice the data
+	for i, series := range df.Columns {
+		newSeries := Series{
+			Name:     series.Name,
+			DataType: series.DataType,
+		}
+
+		// Slice based on the DataType
+		if series.DataType == "float" {
+			newSeries.Float = series.Float[offset : offset+length]
+		} else if series.DataType == "string" {
+			newSeries.String = series.String[offset : offset+length]
+		}
+
+		newDf.Columns[i] = newSeries
+	}
+
+	return newDf
+}
