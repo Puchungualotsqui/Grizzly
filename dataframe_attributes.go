@@ -43,6 +43,6 @@ func (df *DataFrame) GetColumnByName(name string) *Series {
 	panic(fmt.Sprintf("%s not found", name))
 }
 
-func (df *DataFrame) GetColumnByIndex(index int) Series {
-	return df.Columns[index]
+func (df *DataFrame) GetColumnByIndex(index int) *Series {
+	return &df.Columns[index]
 }

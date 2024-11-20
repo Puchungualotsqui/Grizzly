@@ -158,6 +158,22 @@ func (df *DataFrame) ConvertFloatToString(names ...string) {
 	return
 }
 
+func (df *DataFrame) ConvertStringToFloatIndex(indexes ...int) {
+	for _, index := range indexes {
+		series := df.GetColumnByIndex(index)
+		series.ConvertStringToFloat()
+	}
+	return
+}
+
+func (df *DataFrame) ConvertFloatToStringIndex(indexes ...int) {
+	for _, index := range indexes {
+		series := df.GetColumnByIndex(index)
+		series.ConvertFloatToString()
+	}
+	return
+}
+
 func (df *DataFrame) SplitColumn(columnName, delimiter string, newColumnNames []string) {
 	column := df.GetColumnByName(columnName)
 
@@ -268,7 +284,7 @@ func (df *DataFrame) JoinColumns(columnName1, columnName2, delimiter, newColumnN
 	return
 }
 
-func (df *DataFrame) Slice(offset int, length int) *DataFrame {
+func (df *DataFrame) SliceRows(offset int, length int) {
 	// Ensure offset is within bounds
 	if offset < 0 || offset >= len(df.Columns[0].Float) {
 		panic("offset out of range")
@@ -301,5 +317,54 @@ func (df *DataFrame) Slice(offset int, length int) *DataFrame {
 		newDf.Columns[i] = newSeries
 	}
 
-	return newDf
+	return
+}
+
+func (df *DataFrame) SliceColumnsByIndex(indexes ...int) {
+	for i, _ := range df.Columns {
+		if ArrayContainsInteger(indexes, i) {
+			df.Columns = append(df.Columns[:i], df.Columns[i+1:]...)
+		}
+	}
+}
+
+func (df *DataFrame) MergeDataFrame(otherDf DataFrame) {
+	names := df.GetColumnNames()
+	otherNames := otherDf.GetColumnNames()
+	for _, name := range names {
+		if ArrayContainsString(otherNames, name) {
+			panic("Column already exists")
+		}
+	}
+	df.Columns = append(df.Columns, otherDf.Columns...)
+}
+
+func (df *DataFrame) Concatenate(otherDf DataFrame, defaultValue string) {
+	var newColumn Series
+	otherNames := otherDf.GetColumnNames()
+	names := df.GetColumnNames()
+	for _, name := range otherNames {
+		if !ArrayContainsString(names, name) {
+			newColumn = NewStringSeries(name, []string{})
+			df.AddSeriesForced(newColumn, defaultValue)
+		}
+	}
+	names = append(names, otherNames...)
+	var series *Series
+	var otherSeries *Series
+	for _, name := range names {
+		series = df.GetColumnByName(name)
+		otherSeries = df.GetColumnByName(name)
+		if series.DataType == "float" && otherSeries.DataType == "string" {
+			df.ConvertFloatToString(name)
+		} else if series.DataType == "string" && otherSeries.DataType == "float" {
+			df.ConvertStringToFloat(name)
+		}
+
+		if series.DataType == "float" {
+			series.Float = append(series.Float, otherSeries.Float...)
+		} else if series.DataType == "string" {
+			series.String = append(series.String, otherSeries.String...)
+		}
+	}
 }
