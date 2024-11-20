@@ -90,25 +90,6 @@ func (df *DataFrame) PrintHead(max int) {
 	df.Print(0, max)
 }
 
-func (df *DataFrame) PrintTail(max int) {
-	df.Print(max, df.GetLength())
-}
-
-func (df *DataFrame) PrintOld(max int) {
-	max = MinInt(df.GetLength(), max)
-	var output []string
-	names := df.GetColumnNames()
-	for _, name := range names {
-		output = append(output, name)
-	}
-	fmt.Println(strings.Join(output, "  "))
-	output = output[:0]
-	for i := 0; i < max; i++ {
-		output = append(output, strconv.Itoa(i))
-		for _, series := range df.Columns {
-			output = append(output, series.GetValueAsString(i))
-		}
-		fmt.Println(strings.Join(output, "  "))
-		output = output[:0]
-	}
+func (df *DataFrame) PrintTail(min int) {
+	df.Print(min, df.GetLength())
 }

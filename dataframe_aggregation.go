@@ -72,11 +72,14 @@ func (df *DataFrame) GetVariance() DataFrame {
 func (df *DataFrame) CountWord(word string) DataFrame {
 	var columns []Series
 	var count []float64
+	var result DataFrame
 	for _, series := range df.Columns {
 		count[0] = float64(series.CountWord(word))
 		columns = append(columns, NewFloatSeries(series.Name, count))
 	}
-	return DataFrame{columns}
+	result.Columns = columns
+	result.FixShape("")
+	return result
 }
 
 func (df *DataFrame) GetNonFloatValues() DataFrame {

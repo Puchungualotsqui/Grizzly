@@ -2,13 +2,14 @@ package grizzly
 
 import (
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 )
 
-func (df *DataFrame) FilterFloat(seriesName string, condition func(value float64) bool) {
+func (df *DataFrame) FilterFloat(columnName string, condition func(value float64) bool) {
 	var series *Series
-	series = df.GetColumnByName(seriesName)
+	series = df.GetColumnByName(columnName)
 
 	if series.DataType != "float" {
 		panic("FilterFloatSeries only works with float series")
@@ -61,9 +62,9 @@ func (df *DataFrame) FilterFloat(seriesName string, condition func(value float64
 	}()
 }
 
-func (df *DataFrame) FilterString(seriesName string, condition func(value string) bool) {
+func (df *DataFrame) FilterString(columnName string, condition func(value string) bool) {
 	var series *Series
-	series = df.GetColumnByName(seriesName)
+	series = df.GetColumnByName(columnName)
 
 	if series.DataType != "float" {
 		panic("FilterFloatSeries only works with float series")
@@ -192,8 +193,8 @@ func (df *DataFrame) ApplyString(columnName string, operation func(string) strin
 	return
 }
 
-func (df *DataFrame) ReplaceWholeWord(column, old, new string) {
-	name := df.GetColumnByName(column)
+func (df *DataFrame) ReplaceWholeWord(columnName, old, new string) {
+	name := df.GetColumnByName(columnName)
 	name.ReplaceWholeWord(old, new)
 	return
 }
@@ -457,9 +458,11 @@ func (df *DataFrame) Concatenate(otherDf DataFrame, defaultValue string) {
 func (df *DataFrame) DuplicateColumn(names ...string) {
 	var ptr *Series
 	var series Series
+
 	for _, name := range names {
 		ptr = df.GetColumnByName(name)
 		series = *ptr
+		series.Name = series.Name + strconv.Itoa(1)
 		df.AddSeries(series)
 	}
 	return
