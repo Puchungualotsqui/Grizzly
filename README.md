@@ -6,6 +6,7 @@ An alternative to Python's Pandas library, this package provides efficient data 
 - Data aggregation and statistical functions
 - Data attributes and metadata handling
 - Import and export utilities for common data formats
+  
 ### Installation
 To install the package, use:
 ```
@@ -42,4 +43,12 @@ Aggregate functions include:
 ```
 mean := df.GetMean()
 empty := df.CountEmpty()
+```
+
+# Functions
+## DataFrame Creation
+### CreateDataFrame
+It initialize the DataFrame structure.
+```
+df := CreateDataFrame
 ```
