@@ -1,5 +1,6 @@
 # Go DataFrame Library
 An alternative to Python's Pandas library, this package provides efficient data manipulation and aggregation capabilities tailored for Go developers. The library focuses on DataFrame operations with support for series operations as backend functionalities.
+![Uploading DALL·E 2024-11-20 23.45.20 - Create a sleek and modern logo for a Golang package named 'Grizzly.' The logo should feature a stylized bear (representing 'Grizzly') integrated with .png…]()
 
 ### Features
 - Typed DataFrame (float64 and string)
