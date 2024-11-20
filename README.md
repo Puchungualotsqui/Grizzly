@@ -323,3 +323,10 @@ Create a copy of a column.
 ```
 df.DuplicateColumn("names","street")
 ```
+## Input
+### ImportCSV
+Import CSV file as Grizzly DataFrame.
+- filepath *string*: file path of the csv file.
+```
+df = grizzly.ImportCSV("example.csv")
+```
