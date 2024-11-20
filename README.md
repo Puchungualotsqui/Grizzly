@@ -323,6 +323,38 @@ Create a copy of a column.
 ```
 df.DuplicateColumn("names","street")
 ```
+### Sum
+Sum two columns, the result is saved in a new column.
+- columnName1 *string*: first column to sum.
+- columnName2 *string*: second column to sum.
+- newColumnName *string*: name for the new column with the result.
+```
+df.Sum("x","y","x+y")
+```
+### Subtraction
+Subtract two columns, the result is saved in a new column.
+- columnName1 *string*: column to be minuend.
+- columnName2 *string*: column to be subtrahen.
+- newColumnName *string*: name for the new column with the result.
+```
+df.Subtraction("x","y","x-y")
+```
+### Multiplication
+Multiply two columns, the result is saved in a new column.
+- columnName1 *string*: first column to multiply.
+- columnName2 *string*: second column to multiply.
+- newColumnName *string*: name for the new column with the result.
+```
+df.Subtraction("x","y","x*y")
+```
+### Division
+Divide two columns, the result is saved in a new column.
+- columnName1 *string*: column to be dividend.
+- columnName2 *string*: column to be divisor.
+- newColumnName *string*: name for the new column with the result.
+```
+df.Subtraction("x","y","x/y")
+```
 ## Input
 ### ImportCSV
 Import CSV file as Grizzly DataFrame.
