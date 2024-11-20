@@ -19,24 +19,20 @@ go get github.com/Puchungualotsqui/grizzly
 package main
 
 import (
-    "fmt"
-    "grizzly"
+	"fmt"
+	"grizzly"
 )
 
 func main() {
-    filePath := "example.csv"
-    df, err := grizzly.ImportCSV(filePath)
-}
-```
-### DataFrame Manipulation
-Example of basic manipulation functions:
-```
-df.ReplaceWholeWord("column_name", "USA", "United States"
+	names := [5]string{"Alice", "Bob", "Charlie", "Diana", "Ethan"}
+	ages := [5]int{25, 30, 35, 40, 28}
 
-filterFloat := func(value float64) bool {
-			return value > 25
-		}
-df.FilterFloat("column_name", filterFloat)
+	df := grizzly.CreateDataFrame()
+	df.CreateStringColumn("Names", names)
+	df.CreateFloatColumn("Ages", ages)
+
+	df.PrintHead(5)
+}
 ```
 ### Aggregation
 Aggregate functions include:
