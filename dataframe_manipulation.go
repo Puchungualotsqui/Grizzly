@@ -328,7 +328,7 @@ func (df *DataFrame) SliceColumnsByIndex(indexes ...int) {
 	}
 }
 
-func (df *DataFrame) MergeDataFrame(otherDf DataFrame) {
+func (df *DataFrame) MergeDataFrame(otherDf DataFrame, defaultValue string) {
 	names := df.GetColumnNames()
 	otherNames := otherDf.GetColumnNames()
 	for _, name := range names {
@@ -336,7 +336,9 @@ func (df *DataFrame) MergeDataFrame(otherDf DataFrame) {
 			panic("Column already exists")
 		}
 	}
-	df.Columns = append(df.Columns, otherDf.Columns...)
+	for _, column := range otherDf.Columns {
+		df.AddSeriesForced(column, defaultValue)
+	}
 }
 
 func (df *DataFrame) Concatenate(otherDf DataFrame, defaultValue string) {
@@ -367,4 +369,15 @@ func (df *DataFrame) Concatenate(otherDf DataFrame, defaultValue string) {
 			series.String = append(series.String, otherSeries.String...)
 		}
 	}
+}
+
+func (df *DataFrame) DuplicateColumn(names ...string) {
+	var ptr *Series
+	var series Series
+	for _, name := range names {
+		ptr = df.GetColumnByName(name)
+		series = *ptr
+		df.AddSeries(series)
+	}
+	return
 }
