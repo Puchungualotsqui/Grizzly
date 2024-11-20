@@ -79,3 +79,50 @@ Print last rows in console.
 ```
 df.PrintTail(5)
 ```
+## DataFrame Aggregation
+### GetMax
+Return a DataFrame with the max of each column.
+```
+max := df.GetMax()
+```
+### GetMin
+Return a DataFrame with the min of each column.
+```
+min := df.GetMin()
+```
+### GetMean
+Return a DataFrame with the mean of each column.
+```
+mean := df.GetMean()
+```
+### GetMedian
+Return a DataFrame with the median of each column.
+```
+median := df.GetMedian()
+```
+### GetProduct
+Return a DataFrame with the product of each column.
+```
+product := df.GetProduct()
+```
+### GetSum
+Return a DataFrame with the summation of each column.
+```
+sum := df.GetSum()
+```
+### GetVariance
+Return a DataFrame with the variance of each column.
+```
+variance := df.GetVariance()
+```
+### CountWord
+Return a DataFrame with the count of the input string.
+- word *string*: word to count.
+```
+count := df.CountWord("hello")
+```
+### GetNonFloatValues
+Return a DataFrame with the non float values of each column.
+```
+nonFloat := df.GetNonFloatValues()
+```
