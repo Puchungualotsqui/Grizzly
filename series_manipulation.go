@@ -75,7 +75,7 @@ func (series *Series) ConvertStringToFloat() {
 
 	// Check if an error occurred during conversion
 	if firstErr != nil {
-		fmt.Println("Processing stopped due to error: ", firstErr)
+		fmt.Println("Column was not converted to float due: ", firstErr)
 	} else {
 		series.Float = floatArray
 		series.String = nil // Clear the string slice

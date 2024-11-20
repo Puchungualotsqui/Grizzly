@@ -22,7 +22,6 @@ func (df *DataFrame) FilterFloat(seriesName string, condition func(value float64
 	// Determine number of goroutines
 	numGoroutines := runtime.NumCPU()
 	chunkSize := (length + numGoroutines - 1) / numGoroutines // Calculate chunk size
-	ch := make(chan []int, numGoroutines)                     // Buffered channel for filtered indexes
 	var wg sync.WaitGroup
 
 	for i := 0; i < numGoroutines; i++ {
@@ -59,7 +58,6 @@ func (df *DataFrame) FilterFloat(seriesName string, condition func(value float64
 	// Closing channel after all goroutines finish
 	go func() {
 		wg.Wait()
-		close(ch)
 	}()
 }
 
@@ -79,7 +77,6 @@ func (df *DataFrame) FilterString(seriesName string, condition func(value string
 	// Determine number of goroutines
 	numGoroutines := runtime.NumCPU()
 	chunkSize := (length + numGoroutines - 1) / numGoroutines // Calculate chunk size
-	ch := make(chan []int, numGoroutines)                     // Buffered channel for filtered indexes
 	var wg sync.WaitGroup
 
 	for i := 0; i < numGoroutines; i++ {
@@ -116,7 +113,6 @@ func (df *DataFrame) FilterString(seriesName string, condition func(value string
 	// Closing channel after all goroutines finish
 	go func() {
 		wg.Wait()
-		close(ch)
 	}()
 }
 

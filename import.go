@@ -22,13 +22,15 @@ func ImportCSV(filepath string) DataFrame {
 		panic("Error reading CSV file")
 	}
 
-	if len(records) == 0 {
+	size := len(records)
+	if size == 0 {
 		return DataFrame{}
 	}
 
 	headers := records[0]
+	rows := records[1:]
 	numCols := len(headers)
-	numRows := len(records) - 1 // Exclude header row
+	numRows := size - 1 // Exclude header row
 	columns := make([]Series, numCols)
 
 	// Initialize Series for each header
@@ -40,59 +42,48 @@ func ImportCSV(filepath string) DataFrame {
 			Float:    make([]float64, 0, numRows),
 		}
 	}
+	var result DataFrame
 
 	// Determine the number of goroutines based on available CPUs
 	numGoroutines := runtime.NumCPU()
-	chunkSize := (numCols + numGoroutines - 1) / numGoroutines
+	chunkSize := (numRows + numGoroutines - 1) / numGoroutines
 
 	var wg sync.WaitGroup
-	wg.Add(numGoroutines)
 
-	for g := 0; g < numGoroutines; g++ {
-		start := g * chunkSize
+	for i := 0; i < numGoroutines; i++ {
+		start := i * chunkSize
 		end := start + chunkSize
-		if end > numCols {
-			end = numCols
+		if start >= numRows {
+			break // Ensure we don't start beyond the slice length
+		}
+		if end > numRows {
+			end = numRows // Adjust end index for the last chunk
 		}
 
+		wg.Add(1)
 		go func(start, end int) {
 			defer wg.Done()
-			for colIndex := start; colIndex < end; colIndex++ {
-				for _, row := range records[1:] {
-					// Handle rows with fewer columns by padding with an empty string
-					if colIndex >= len(row) {
-						columns[colIndex].String = append(columns[colIndex].String, "")
-						continue
-					}
-					value := row[colIndex]
-					// Attempt to parse as float
-					if floatValue, err := strconv.ParseFloat(value, 64); err == nil {
-						columns[colIndex].Float = append(columns[colIndex].Float, floatValue)
-						columns[colIndex].DataType = "float"
-					} else {
-						columns[colIndex].String = append(columns[colIndex].String, value)
-					}
+			for j := start; j < end; j++ {
+				for i, _ := range columns {
+					columns[i].String[j] = rows[j][i]
 				}
 			}
 		}(start, end)
 	}
-	wg.Wait()
 
-	// Ensure all columns have consistent lengths
-	for i := range columns {
-		if len(columns[i].String) > 0 && len(columns[i].String) < numRows {
-			for len(columns[i].String) < numRows {
-				columns[i].String = append(columns[i].String, "") // Pad with empty string
-			}
-		}
-		if len(columns[i].Float) > 0 && len(columns[i].Float) < numRows {
-			for len(columns[i].Float) < numRows {
-				columns[i].Float = append(columns[i].Float, 0.0) // Pad with zero float value
-			}
-		}
+	// Closing channel after all goroutines finish
+	go func() {
+		wg.Wait()
+	}()
+
+	for i, _ := range columns {
+		columns[i].ConvertStringToFloat()
 	}
 
-	return DataFrame{Columns: columns}
+	result.Columns = columns
+	result.FixShape("")
+
+	return result
 }
 
 func ImportCSVOld(filepath string) DataFrame {
