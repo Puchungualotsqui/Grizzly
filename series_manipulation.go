@@ -10,6 +10,38 @@ import (
 )
 
 func (series *Series) RemoveIndexes(indexes []int) {
+	if len(indexes) == 0 {
+		return // No indexes to remove
+	}
+
+	// Create a map for quick lookup of indexes to remove
+	removeMap := make(map[int]struct{}, len(indexes))
+	for _, idx := range indexes {
+		removeMap[idx] = struct{}{}
+	}
+
+	if series.DataType == "float" {
+		// Filter the float slice in-place
+		filtered := series.Float[:0] // Use in-place slice filtering
+		for i, value := range series.Float {
+			if _, found := removeMap[i]; !found {
+				filtered = append(filtered, value)
+			}
+		}
+		series.Float = filtered
+	} else {
+		// Filter the string slice in-place
+		filtered := series.String[:0] // Use in-place slice filtering
+		for i, value := range series.String {
+			if _, found := removeMap[i]; !found {
+				filtered = append(filtered, value)
+			}
+		}
+		series.String = filtered
+	}
+}
+
+func (series *Series) RemoveIndexesOld(indexes []int) {
 	if series.DataType == "float" {
 		filteredFloats := make([]float64, len(indexes))
 		for i, idx := range indexes {
@@ -82,7 +114,6 @@ func (series *Series) FilterFloatSeries(condition func(float64) bool) []int {
 		filteredIndexes = append(filteredIndexes, indexes...)
 	}
 
-	//series.RemoveIndexes(filteredIndexes) // Ensure RemoveIndexes is properly implemented
 	return filteredIndexes
 }
 
