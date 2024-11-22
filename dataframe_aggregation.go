@@ -98,3 +98,25 @@ func (df *DataFrame) GetNonFloatValues() DataFrame {
 	resultDataframe.FixShape("")
 	return resultDataframe
 }
+
+func (df *DataFrame) GetUniqueValues() DataFrame {
+	var result DataFrame
+	var temp Series
+	var tempString []string
+	var tempFloat []float64
+	for _, column := range df.Columns {
+		if column.DataType == "string" {
+			tempString = ArrayUniqueValuesString(column.String)
+			temp = NewStringSeries(column.Name, tempString)
+			result.Columns = append(result.Columns, temp)
+			tempString = nil
+		} else {
+			tempFloat = ArrayUniqueValuesFloat(column.Float)
+			temp = NewFloatSeries(column.Name, tempFloat)
+			result.Columns = append(result.Columns, temp)
+			tempFloat = nil
+		}
+	}
+	result.FixShape("")
+	return result
+}

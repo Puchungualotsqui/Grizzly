@@ -582,3 +582,39 @@ func (df *DataFrame) Expand(size int, defaultFloat float64, defaultString string
 		return
 	}
 }
+
+func (df *DataFrame) SwapRows(index1, index2 int) {
+	if index1 < 0 || index1 >= len(df.Columns) || index2 < 0 || index2 >= len(df.Columns) {
+		panic("row index out of bounds")
+	}
+	if index1 == index2 {
+		return
+	}
+	for i, series := range df.Columns {
+		if series.DataType == "float" {
+			df.Columns[i].Float[index1], df.Columns[i].Float[index2] = df.Columns[i].Float[index2], df.Columns[i].Float[index1]
+		} else {
+			df.Columns[i].String[index1], df.Columns[i].String[index2] = df.Columns[i].String[index2], df.Columns[i].String[index1]
+		}
+	}
+	return
+}
+
+func (df *DataFrame) Sort(index int) {
+	var mapIndex []int
+	series := df.GetColumnByIndex(index)
+	tracker := NewIntegerSet()
+	if series.DataType == "float" {
+		_, mapIndex = ParallelSortFloatMap(series.Float)
+	} else {
+		_, mapIndex = ParallelSortStringsMap(series.String)
+	}
+	size := series.GetLength()
+	for i := 0; i < size; i++ {
+		if !tracker.SetContainsInteger(i) {
+			df.SwapRows(i, mapIndex[i])
+			tracker.AddIntegerSet(i)
+			tracker.AddIntegerSet(mapIndex[i])
+		}
+	}
+}

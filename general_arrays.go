@@ -1,12 +1,104 @@
 package grizzly
 
 import (
-	"math"
 	"runtime"
-	"sort"
 	"strconv"
 	"sync"
 )
+
+func ArrayFloatBase(initValue float64, data []float64, operation func(info float64, result float64) float64) chan float64 {
+	length := len(data)
+	if length == 0 {
+		// Handle empty data case by returning a closed channel immediately
+		emptyChan := make(chan float64)
+		close(emptyChan)
+		return emptyChan
+	}
+	numGoroutines := runtime.NumCPU()
+	if numGoroutines > length {
+		numGoroutines = length // Avoid creating more goroutines than necessary
+	}
+	chunkSize := (length + numGoroutines - 1) / numGoroutines
+	var wg sync.WaitGroup
+	resultChan := make(chan float64, numGoroutines)
+
+	// Function to calculate the sum of a chunk
+	worker := func(start, end int) {
+		defer wg.Done()
+		result := initValue
+		// Always starts from second value to calculate Mean Correctly
+		for i := start; i < end; i++ {
+			result = operation(data[i], result)
+		}
+		resultChan <- result
+	}
+
+	// Launch goroutines to process chunks
+	for i := 0; i < numGoroutines; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		if end > length {
+			end = length
+		}
+		wg.Add(1)
+		go worker(start, end)
+	}
+
+	// Wait for all workers to finish and close the results channel
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	return resultChan
+}
+
+func ArrayStringBase(initValue float64, data []string, operation func(info string, result float64) float64) chan float64 {
+	length := len(data)
+	if length == 0 {
+		// Handle empty data case by returning a closed channel immediately
+		emptyChan := make(chan float64)
+		close(emptyChan)
+		return emptyChan
+	}
+	numGoroutines := runtime.NumCPU()
+	if numGoroutines > length {
+		numGoroutines = length // Avoid creating more goroutines than necessary
+	}
+	chunkSize := (length + numGoroutines - 1) / numGoroutines
+	var wg sync.WaitGroup
+	resultChan := make(chan float64, numGoroutines)
+
+	// Function to calculate the sum of a chunk
+	worker := func(start, end int) {
+		defer wg.Done()
+		result := initValue
+		// Always starts from second value to calculate Mean Correctly
+		for i := start; i < end; i++ {
+			result = operation(data[i], result)
+		}
+		resultChan <- result
+	}
+
+	// Launch goroutines to process chunks
+	for i := 0; i < numGoroutines; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		if end > length {
+			end = length
+		}
+		wg.Add(1)
+		go worker(start, end)
+	}
+
+	// Wait for all workers to finish and close the results channel
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	return resultChan
+}
 
 func ArrayCountWord(data []string, word string) float64 {
 	chain := ArrayStringBase(0, data, func(info string, result float64) float64 {
@@ -21,132 +113,6 @@ func ArrayCountWord(data []string, word string) float64 {
 		result += val
 	}
 	return result
-}
-
-func ParallelSort(arr []float64) []float64 {
-	n := len(arr)
-	if n <= 1 {
-		return arr
-	}
-
-	numCPUs := runtime.NumCPU()
-	chunkSize := int(math.Ceil(float64(n) / float64(numCPUs)))
-
-	// Channel to collect sorted chunks
-	chunks := make(chan []float64, numCPUs)
-
-	// Use a WaitGroup to synchronize goroutines
-	var wg sync.WaitGroup
-
-	for i := 0; i < numCPUs; i++ {
-		start := i * chunkSize
-		end := start + chunkSize
-		if start >= n {
-			break // Avoid processing if start is beyond the array length
-		}
-		if end > n {
-			end = n // Ensure we don't go out of bounds
-		}
-
-		wg.Add(1)
-
-		// Sort each chunk in a separate Goroutine
-		go func(subarray []float64) {
-			defer wg.Done()
-			sort.Float64s(subarray) // Sort the chunk
-			chunks <- subarray      // Send it to the channel
-		}(arr[start:end])
-	}
-
-	// Wait for all Goroutines to finish
-	go func() {
-		wg.Wait()
-		close(chunks)
-	}()
-
-	// Collect and merge sorted chunks
-	sortedResult := make([]float64, 0, n)
-	for sortedChunk := range chunks {
-		sortedResult = Merge(sortedResult, sortedChunk)
-	}
-
-	return sortedResult
-}
-
-func Merge(left, right []float64) []float64 {
-	result := make([]float64, 0, len(left)+len(right))
-	i, j := 0, 0
-	for i < len(left) && j < len(right) {
-		if left[i] < right[j] {
-			result = append(result, left[i])
-			i++
-		} else {
-			result = append(result, right[j])
-			j++
-		}
-	}
-	// Append any remaining elements
-	result = append(result, left[i:]...)
-	result = append(result, right[j:]...)
-	return result
-}
-
-func ArrayCountStringDuplicates(elements []string) map[string]int {
-	numCPU := runtime.NumCPU()
-	length := len(elements)
-	if length == 0 {
-		return nil // Handle empty input
-	}
-
-	// Calculate chunk size for splitting work
-	chunkSize := (length + numCPU - 1) / numCPU
-	resultChan := make(chan map[string]int, numCPU)
-	var wg sync.WaitGroup
-
-	// Worker function to count duplicates in a subset of elements
-	countDuplicates := func(subset []string) {
-		defer wg.Done()
-		localCounts := make(map[string]int)
-		for _, element := range subset {
-			localCounts[element]++
-		}
-		resultChan <- localCounts // Send local result to the channel
-	}
-
-	// Start goroutines to process chunks of the array
-	for i := 0; i < numCPU && i*chunkSize < length; i++ {
-		start := i * chunkSize
-		end := start + chunkSize
-		if end > length {
-			end = length
-		}
-		wg.Add(1)
-		go countDuplicates(elements[start:end])
-	}
-
-	// Close the channel once all workers are done
-	go func() {
-		wg.Wait()
-		close(resultChan)
-	}()
-
-	// Merge results from all goroutines
-	combinedCounts := make(map[string]int)
-	for localCounts := range resultChan {
-		for key, count := range localCounts {
-			combinedCounts[key] += count
-		}
-	}
-
-	// Filter results to retain only elements with counts greater than 1
-	finalResult := make(map[string]int)
-	for key, count := range combinedCounts {
-		if count > 1 {
-			finalResult[key] = count
-		}
-	}
-
-	return finalResult
 }
 
 func ArrayCountFloatDuplicates(elements []float64) map[float64]int {
@@ -188,7 +154,7 @@ func ArrayCountFloatDuplicates(elements []float64) map[float64]int {
 		close(resultChan)
 	}()
 
-	// Merge results from all goroutines
+	// MergeFloat results from all goroutines
 	combinedCounts := make(map[float64]int)
 	for localCounts := range resultChan {
 		for key, count := range localCounts {
@@ -243,4 +209,124 @@ func ArrayResizeString(input []string, targetLength int, defaultValue string) []
 		input = append(input, defaultValue)
 	}
 	return input
+}
+
+func ArrayUniqueValuesFloat(arr []float64) []float64 {
+	if len(arr) == 0 {
+		return []float64{}
+	}
+
+	numGoroutines := runtime.NumCPU()
+	if numGoroutines > len(arr) {
+		numGoroutines = len(arr) // Avoid spawning more goroutines than necessary
+	}
+
+	chunkSize := (len(arr) + numGoroutines - 1) / numGoroutines
+
+	// Channel to collect results from goroutines
+	results := make(chan map[float64]struct{}, numGoroutines)
+	var wg sync.WaitGroup
+
+	// Divide work among goroutines
+	for i := 0; i < numGoroutines; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		if end > len(arr) {
+			end = len(arr)
+		}
+		chunk := arr[start:end]
+
+		wg.Add(1)
+		go func(data []float64) {
+			defer wg.Done()
+			// Calculate unique values for the chunk
+			chunkUnique := make(map[float64]struct{}, len(data))
+			for _, val := range data {
+				chunkUnique[val] = struct{}{}
+			}
+			results <- chunkUnique
+		}(chunk)
+	}
+
+	// Close results channel once all goroutines finish
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// MergeFloat results from all chunks
+	finalUnique := make(map[float64]struct{})
+	for chunkResult := range results {
+		for key := range chunkResult {
+			finalUnique[key] = struct{}{}
+		}
+	}
+
+	// Convert the unique values map to a slice
+	uniqueValues := make([]float64, 0, len(finalUnique))
+	for key := range finalUnique {
+		uniqueValues = append(uniqueValues, key)
+	}
+
+	return uniqueValues
+}
+
+func ArrayUniqueValuesString(arr []string) []string {
+	if len(arr) == 0 {
+		return []string{}
+	}
+
+	numGoroutines := runtime.NumCPU()
+	if numGoroutines > len(arr) {
+		numGoroutines = len(arr) // Avoid spawning more goroutines than necessary
+	}
+
+	chunkSize := (len(arr) + numGoroutines - 1) / numGoroutines
+
+	// Channel to collect results from goroutines
+	results := make(chan map[string]struct{}, numGoroutines)
+	var wg sync.WaitGroup
+
+	// Divide work among goroutines
+	for i := 0; i < numGoroutines; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		if end > len(arr) {
+			end = len(arr)
+		}
+		chunk := arr[start:end]
+
+		wg.Add(1)
+		go func(data []string) {
+			defer wg.Done()
+			// Calculate unique values for the chunk
+			chunkUnique := make(map[string]struct{}, len(data))
+			for _, val := range data {
+				chunkUnique[val] = struct{}{}
+			}
+			results <- chunkUnique
+		}(chunk)
+	}
+
+	// Close results channel once all goroutines finish
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// MergeFloat results from all chunks
+	finalUnique := make(map[string]struct{})
+	for chunkResult := range results {
+		for key := range chunkResult {
+			finalUnique[key] = struct{}{}
+		}
+	}
+
+	// Convert the unique values map to a slice
+	uniqueValues := make([]string, 0, len(finalUnique))
+	for key := range finalUnique {
+		uniqueValues = append(uniqueValues, key)
+	}
+
+	return uniqueValues
 }

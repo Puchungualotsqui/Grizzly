@@ -46,3 +46,30 @@ func (df *DataFrame) GetColumnByName(name string) *Series {
 func (df *DataFrame) GetColumnByIndex(index int) *Series {
 	return &df.Columns[index]
 }
+
+func (df *DataFrame) GetColumnTypeIndex(index int) string {
+	return df.Columns[index].DataType
+}
+
+func (df *DataFrame) GetColumnType(name string) string {
+	series := df.GetColumnByName(name)
+	return series.DataType
+}
+
+func (df *DataFrame) ColumnIsStringIndex(index int) bool {
+	return df.Columns[index].DataType == "string"
+}
+
+func (df *DataFrame) ColumnIsString(name string) bool {
+	series := df.GetColumnByName(name)
+	return series.DataType == "string"
+}
+
+func (df *DataFrame) ColumnIsFloatIndex(index int) bool {
+	return df.Columns[index].DataType == "float"
+}
+
+func (df *DataFrame) ColumnIsFloat(name string) bool {
+	series := df.GetColumnByName(name)
+	return series.DataType == "float"
+}
