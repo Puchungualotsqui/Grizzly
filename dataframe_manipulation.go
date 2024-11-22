@@ -584,7 +584,8 @@ func (df *DataFrame) Expand(size int, defaultFloat float64, defaultString string
 }
 
 func (df *DataFrame) SwapRows(index1, index2 int) {
-	if index1 < 0 || index1 >= len(df.Columns) || index2 < 0 || index2 >= len(df.Columns) {
+	size := df.GetLength()
+	if index1 < 0 || index1 >= size || index2 < 0 || index2 >= size {
 		panic("row index out of bounds")
 	}
 	if index1 == index2 {
