@@ -1,5 +1,8 @@
 # Go DataFrame Library
-An alternative to Python's Pandas library, this package provides efficient data manipulation and aggregation capabilities tailored for Go developers. The library focuses on DataFrame operations with support for series operations as backend functionalities.
+An alternative to Python's Pandas library, this package provides efficient data manipulation and aggregation capabilities tailored for Go developers. The library focuses on DataFrame operations with support for series operations as backend functionalities. 
+
+![image](https://github.com/user-attachments/assets/8e8ed677-ee0c-4c13-9cf0-b6c48b009da6)
+
 
 ### Features
 - Typed DataFrame (float64 and string)
@@ -322,6 +325,38 @@ Create a copy of a column.
 - names *...string*: names of the columns to duplicate.
 ```
 df.DuplicateColumn("names","street")
+```
+### Sum
+Sum two columns, the result is saved in a new column.
+- columnName1 *string*: first column to sum.
+- columnName2 *string*: second column to sum.
+- newColumnName *string*: name for the new column with the result.
+```
+df.Sum("x","y","x+y")
+```
+### Subtraction
+Subtract two columns, the result is saved in a new column.
+- columnName1 *string*: column to be minuend.
+- columnName2 *string*: column to be subtrahen.
+- newColumnName *string*: name for the new column with the result.
+```
+df.Subtraction("x","y","x-y")
+```
+### Multiplication
+Multiply two columns, the result is saved in a new column.
+- columnName1 *string*: first column to multiply.
+- columnName2 *string*: second column to multiply.
+- newColumnName *string*: name for the new column with the result.
+```
+df.Subtraction("x","y","x*y")
+```
+### Division
+Divide two columns, the result is saved in a new column.
+- columnName1 *string*: column to be dividend.
+- columnName2 *string*: column to be divisor.
+- newColumnName *string*: name for the new column with the result.
+```
+df.Subtraction("x","y","x/y")
 ```
 ## Input
 ### ImportCSV
