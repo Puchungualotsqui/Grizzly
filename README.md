@@ -172,6 +172,48 @@ Return bool value as true if the column exists.
 var contains bool
 contains = df.ContainsColumn("last_names")
 ```
+### GetColumnTypeIndex
+Return an string with the type of data of the column.
+- index *int*: the index of the column to get the data type of it.
+```
+var dataType string
+dataType = df.GetColumnTypeIndex(0)
+```
+### GetColumnType
+Return an string with the type of data of the column.
+- name *string*: the name of the column to get the data type of it.
+```
+var dataType string
+dataType = df.GetColumnType("name")
+```
+### ColumnIsStringIndex
+Return a bool true or false depending if the data type of the selected column is string.
+- index *int*: the index of the column to verify if is string type.
+```
+var isString bool
+isString = df.ColumnIsStringIndex(0)
+```
+### ColumnIsString
+Return a bool true or false depending if the data type of the selected column is string.
+- name *string*: the name of the column to verify if is string type.
+```
+var isString bool
+isString = df.ColumnIsString(0)
+```
+### ColumnIsFloatIndex
+Return a bool true or false depending if the data type of the selected column is float.
+- index *int*: the index of the column to verify if is float type.
+```
+var isFloat bool
+isFloat = df.ColumnIsFloatIndex(0)
+```
+### ColumnIsFloat
+Return a bool true or false depending if the data type of the selected column is float.
+- name *string*: the name of the column to verify if is float type.
+```
+var isFloat bool
+isFloat = df.ColumnIsFloat(0)
+```
 ## DataFrame Manipulation
 ### FilterFloat
 Filter rows based on a condition for float columns.
