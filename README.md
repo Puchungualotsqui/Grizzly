@@ -358,6 +358,43 @@ Divide two columns, the result is saved in a new column.
 ```
 df.Subtraction("x","y","x/y")
 ```
+### SetFloatValue
+Change the value of a row of a float column.
+- columnIndex *int*: index of the column to change value.
+- rowIndex *int*: index of the row to change the value.
+- newValue *float64*: new value.
+```
+df.SetFloatValue(2,100,94.213)
+```
+### SetStringValue
+Change the value of a row of a string column.
+- columnIndex *int*: index of the column to change value.
+- rowIndex *int*: index of the row to change the value.
+- newValue *string*: new value.
+```
+df.SetStringValue(2,100,"sebastian")
+```
+### GetFloatValue
+Return the float64 value of a row of a float column.
+- columnIndex *int*: index of the column to return value.
+- rowIndex *int*: index of the row to return the value.
+```
+var returnValue float
+returnValue = df.GetFloatValue(2,1245)
+```
+### GetStringValue
+Return the string value of a row of a float column.
+- columnIndex *int*: index of the column to return value.
+- rowIndex *int*: index of the row to return the value.
+```
+var returnValue string
+returnValue = df.GetStringValue(2,1245)
+```
+### Expand
+Add new rows to the DataFrame.
+- size *int*: amount of new rows.
+- defaultFloat *float64*: default value for new rows in float columns.
+- defaultString *string*: default value for new rows in string columns.
 ## Input
 ### ImportCSV
 Import CSV file as Grizzly DataFrame.
