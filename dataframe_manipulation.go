@@ -563,3 +563,22 @@ func (df *DataFrame) GetStringValue(columnIndex, rowIndex int) string {
 	}
 	return series.String[rowIndex]
 }
+
+func (df *DataFrame) Expand(size int, defaultFloat float64, defaultString string) {
+	for i, series := range df.Columns {
+		if series.DataType == "string" {
+			temp := make([]string, size)
+			for n := range temp {
+				temp[n] = defaultString
+			}
+			df.Columns[i].String = append(series.String, temp...)
+			return
+		}
+		temp := make([]float64, size)
+		for n := range temp {
+			temp[n] = defaultFloat
+		}
+		df.Columns[i].Float = append(series.Float, temp...)
+		return
+	}
+}
