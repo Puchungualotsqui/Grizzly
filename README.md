@@ -219,6 +219,13 @@ Return a bool true or false depending if the data type of the selected column is
 var isFloat bool
 isFloat = df.ColumnIsFloat(0)
 ```
+### GetColumnIndexByName
+Return the index of the column by name.
+- columnName *string*: column name
+```
+var index int
+index = df.GetColumnIndexByName("name")
+```
 ## DataFrame Manipulation
 ### FilterFloat
 Filter rows based on a condition for float columns.
@@ -456,9 +463,15 @@ df.SwapRows(1,0)
 ```
 ### Sort
 Sort the Dataframe based on one column.
+- columnName *string*: index of the column to sort the dataframe.
+```
+df.Sort("name")
+```
+### SortIndex
+Sort the Dataframe based on one column.
 - index *int*: index of the column to sort the dataframe.
 ```
-df.Sort(0)
+df.SortIndex(0)
 ```
 ## Input
 ### ImportCSV
