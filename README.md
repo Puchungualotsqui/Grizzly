@@ -140,6 +140,11 @@ Return a DataFrame with the non float values of each column.
 var nonFloat DataFrame
 nonFloat = df.GetNonFloatValues()
 ```
+### GetUniqueValues
+Return a DataFrame with the unique values of each column.
+```
+df.GetUniqueValues()
+```
 ## DataFrame Attributes
 ### GetLength
 Return the number of rows as integer.
@@ -439,6 +444,22 @@ Add new rows to the DataFrame.
 - size *int*: amount of new rows.
 - defaultFloat *float64*: default value for new rows in float columns.
 - defaultString *string*: default value for new rows in string columns.
+```
+df.Expand(100, 0, "")
+```
+### SwapRows
+Swap the value of two rows.
+- index1 *int*: index of the first row to swap values.
+- index2 *int*: index of the second row to swap values.
+```
+df.SwapRows(1,0)
+```
+### Sort
+Sort the Dataframe based on one column.
+- index *int*: index of the column to sort the dataframe.
+```
+df.Sort(0)
+```
 ## Input
 ### ImportCSV
 Import CSV file as Grizzly DataFrame.
