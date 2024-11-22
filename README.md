@@ -1,5 +1,7 @@
 # Go DataFrame Library
-An alternative to Python's Pandas library, this package provides efficient data manipulation and aggregation capabilities tailored for Go developers. The library focuses on DataFrame operations with support for series operations as backend functionalities. 
+Grizzly is a DataFrame library for Go, designed to harness the full power of GoRoutines for handling large datasets efficiently. Its core aim is to provide an easy-to-use, yet robust, solution for data manipulation while maximizing the computational capabilities of modern machines through parallelized task execution.
+
+Unlike many other libraries, Grizzly enforces a more rigid approach to DataFrame management. Users are required to explicitly specify data types, such as float or string, ensuring clarity, type safety, and reducing potential errors in data processing.
 
 ![image](https://github.com/user-attachments/assets/8e8ed677-ee0c-4c13-9cf0-b6c48b009da6)
 
