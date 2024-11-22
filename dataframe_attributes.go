@@ -73,3 +73,12 @@ func (df *DataFrame) ColumnIsFloat(name string) bool {
 	series := df.GetColumnByName(name)
 	return series.DataType == "float"
 }
+
+func (df *DataFrame) GetColumnIndexByName(columnName string) int {
+	for i, series := range df.Columns {
+		if series.Name == columnName {
+			return i
+		}
+	}
+	panic(fmt.Sprintf("%s not found", columnName))
+}

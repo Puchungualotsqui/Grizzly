@@ -602,21 +602,77 @@ func (df *DataFrame) SwapRows(index1, index2 int) {
 }
 
 // QuickSort sorts the array in place using the QuickSort algorithm
-func (df *DataFrame) Sort(index int, internal ...int) {
-	low := internal[0]
-	high := internal[1]
+func (df *DataFrame) Sort(columnName string, internal ...int) {
+	var low int
+	var high int
+	var p int
+	var index = df.GetColumnIndexByName(columnName)
+	if len(internal) == 0 {
+		low = 0
+		high = df.GetLength() - 1
+	} else {
+		low = internal[0]
+		high = internal[1]
+	}
 	if low < high {
 		// Partition the array
-		p := df.partition(index, low, high)
+		if df.Columns[index].DataType == "float" {
+			p = df.PartitionFloat(index, low, high)
+		} else {
+			p = df.PartitionString(index, low, high)
+		}
 
 		// Recursively sort the subarrays
-		df.Sort(low, p-1)
-		df.Sort(p+1, high)
+		df.SortIndex(index, low, p-1)
+		df.SortIndex(index, p+1, high)
 	}
 }
 
+// QuickSort sorts the array in place using the QuickSort algorithm
+func (df *DataFrame) SortIndex(index int, internal ...int) {
+	var low int
+	var high int
+	var p int
+	if len(internal) == 0 {
+		low = 0
+		high = df.GetLength() - 1
+	} else {
+		low = internal[0]
+		high = internal[1]
+	}
+	if low < high {
+		// Partition the array
+		if df.Columns[index].DataType == "float" {
+			p = df.PartitionFloat(index, low, high)
+		} else {
+			p = df.PartitionString(index, low, high)
+		}
+
+		// Recursively sort the subarrays
+		df.SortIndex(index, low, p-1)
+		df.SortIndex(index, p+1, high)
+	}
+}
+
+// PartitionString rearranges the array and returns the pivot index for strings
+func (df *DataFrame) PartitionString(index, low, high int) int {
+	pivot := df.Columns[index].String[high] // Choose the last element as pivot
+	i := low - 1                            // Pointer for the smaller element
+
+	for j := low; j < high; j++ {
+		if df.Columns[index].String[j] < pivot {
+			i++
+			df.SwapRows(i, j) // Swap if element is smaller than pivot
+		}
+	}
+
+	// Place the pivot in the correct position
+	df.SwapRows(i+1, high)
+	return i + 1
+}
+
 // partition rearranges the array and returns the pivot index
-func (df *DataFrame) partition(index, low, high int) int {
+func (df *DataFrame) PartitionFloat(index, low, high int) int {
 	pivot := df.Columns[index].Float[high] // Choose the last element as pivot
 	i := low - 1                           // Pointer for the smaller element
 
