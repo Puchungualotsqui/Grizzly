@@ -531,3 +531,35 @@ func (df *DataFrame) Multiplication(columnName1, columnName2, newColumnName stri
 func (df *DataFrame) Division(columnName1, columnName2, newColumnName string) {
 	df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x / y })
 }
+
+func (df *DataFrame) SetFloatValue(columnIndex, rowIndex int, newValue float64) {
+	series := df.GetColumnByIndex(columnIndex)
+	if series.DataType != "float" {
+		panic("Type of column is not float")
+	}
+	series.Float[rowIndex] = newValue
+}
+
+func (df *DataFrame) SetStringValue(columnIndex, rowIndex int, newValue string) {
+	series := df.GetColumnByIndex(columnIndex)
+	if series.DataType != "string" {
+		panic("Type of column is not string")
+	}
+	series.String[rowIndex] = newValue
+}
+
+func (df *DataFrame) GetFloatValue(columnIndex, rowIndex int) float64 {
+	series := df.GetColumnByIndex(columnIndex)
+	if series.DataType != "float" {
+		panic("Type of column is not float")
+	}
+	return series.Float[rowIndex]
+}
+
+func (df *DataFrame) GetStringValue(columnIndex, rowIndex int) string {
+	series := df.GetColumnByIndex(columnIndex)
+	if series.DataType != "string" {
+		panic("Type of column is not string")
+	}
+	return series.String[rowIndex]
+}
