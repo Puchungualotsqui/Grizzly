@@ -1,5 +1,7 @@
 # Go DataFrame Library
-An alternative to Python's Pandas library, this package provides efficient data manipulation and aggregation capabilities tailored for Go developers. The library focuses on DataFrame operations with support for series operations as backend functionalities. 
+Grizzly is a DataFrame library for Go, designed to harness the full power of GoRoutines for handling large datasets efficiently. Its core aim is to provide an easy-to-use, yet robust, solution for data manipulation while maximizing the computational capabilities of modern machines through parallelized task execution.
+
+Unlike many other libraries, Grizzly enforces a more rigid approach to DataFrame management. Users are required to explicitly specify data types, such as float or string, ensuring clarity, type safety, and reducing potential errors in data processing.
 
 ![image](https://github.com/user-attachments/assets/8e8ed677-ee0c-4c13-9cf0-b6c48b009da6)
 
@@ -138,6 +140,11 @@ Return a DataFrame with the non float values of each column.
 var nonFloat DataFrame
 nonFloat = df.GetNonFloatValues()
 ```
+### GetUniqueValues
+Return a DataFrame with the unique values of each column.
+```
+df.GetUniqueValues()
+```
 ## DataFrame Attributes
 ### GetLength
 Return the number of rows as integer.
@@ -169,6 +176,48 @@ Return bool value as true if the column exists.
 ```
 var contains bool
 contains = df.ContainsColumn("last_names")
+```
+### GetColumnTypeIndex
+Return an string with the type of data of the column.
+- index *int*: the index of the column to get the data type of it.
+```
+var dataType string
+dataType = df.GetColumnTypeIndex(0)
+```
+### GetColumnType
+Return an string with the type of data of the column.
+- name *string*: the name of the column to get the data type of it.
+```
+var dataType string
+dataType = df.GetColumnType("name")
+```
+### ColumnIsStringIndex
+Return a bool true or false depending if the data type of the selected column is string.
+- index *int*: the index of the column to verify if is string type.
+```
+var isString bool
+isString = df.ColumnIsStringIndex(0)
+```
+### ColumnIsString
+Return a bool true or false depending if the data type of the selected column is string.
+- name *string*: the name of the column to verify if is string type.
+```
+var isString bool
+isString = df.ColumnIsString(0)
+```
+### ColumnIsFloatIndex
+Return a bool true or false depending if the data type of the selected column is float.
+- index *int*: the index of the column to verify if is float type.
+```
+var isFloat bool
+isFloat = df.ColumnIsFloatIndex(0)
+```
+### ColumnIsFloat
+Return a bool true or false depending if the data type of the selected column is float.
+- name *string*: the name of the column to verify if is float type.
+```
+var isFloat bool
+isFloat = df.ColumnIsFloat(0)
 ```
 ## DataFrame Manipulation
 ### FilterFloat
@@ -395,6 +444,22 @@ Add new rows to the DataFrame.
 - size *int*: amount of new rows.
 - defaultFloat *float64*: default value for new rows in float columns.
 - defaultString *string*: default value for new rows in string columns.
+```
+df.Expand(100, 0, "")
+```
+### SwapRows
+Swap the value of two rows.
+- index1 *int*: index of the first row to swap values.
+- index2 *int*: index of the second row to swap values.
+```
+df.SwapRows(1,0)
+```
+### Sort
+Sort the Dataframe based on one column.
+- index *int*: index of the column to sort the dataframe.
+```
+df.Sort(0)
+```
 ## Input
 ### ImportCSV
 Import CSV file as Grizzly DataFrame.
