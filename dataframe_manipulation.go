@@ -601,21 +601,33 @@ func (df *DataFrame) SwapRows(index1, index2 int) {
 	return
 }
 
-func (df *DataFrame) Sort(index int) {
-	var mapIndex []int
-	series := df.GetColumnByIndex(index)
-	tracker := NewIntegerSet()
-	if series.DataType == "float" {
-		_, mapIndex = ParallelSortFloatMap(series.Float)
-	} else {
-		_, mapIndex = ParallelSortStringsMap(series.String)
+// QuickSort sorts the array in place using the QuickSort algorithm
+func (df *DataFrame) Sort(index int, internal ...int) {
+	low := internal[0]
+	high := internal[1]
+	if low < high {
+		// Partition the array
+		p := df.partition(index, low, high)
+
+		// Recursively sort the subarrays
+		df.Sort(low, p-1)
+		df.Sort(p+1, high)
 	}
-	size := series.GetLength()
-	for i := 0; i < size; i++ {
-		if !tracker.SetContainsInteger(i) {
-			df.SwapRows(i, mapIndex[i])
-			tracker.AddIntegerSet(i)
-			tracker.AddIntegerSet(mapIndex[i])
+}
+
+// partition rearranges the array and returns the pivot index
+func (df *DataFrame) partition(index, low, high int) int {
+	pivot := df.Columns[index].Float[high] // Choose the last element as pivot
+	i := low - 1                           // Pointer for the smaller element
+
+	for j := low; j < high; j++ {
+		if df.Columns[index].Float[j] < pivot {
+			i++
+			df.SwapRows(i, j) // Swap if element is smaller than pivot
 		}
 	}
+
+	// Place the pivot in the correct position
+	df.SwapRows(i+1, high)
+	return i + 1
 }
