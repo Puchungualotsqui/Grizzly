@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"sync"
 )
 
 func (df *DataFrame) ExportToCSV(filePath string) error {
@@ -38,10 +39,12 @@ func (df *DataFrame) ExportToCSV(filePath string) error {
 	chunkSize := (numRows + numGoroutines - 1) / numGoroutines // Ceiling division
 
 	// Channel for errors
-	errorChan := make(chan error, numGoroutines)
+	errorChan := make(chan error)
+	var wg sync.WaitGroup
 
 	// Worker function
-	worker := func(start, end int, errorChan chan<- error) {
+	worker := func(start, end int) {
+		defer wg.Done()
 		for i := start; i < end; i++ {
 			row := make([]string, numCols)
 			for j, col := range df.Columns {
@@ -74,12 +77,19 @@ func (df *DataFrame) ExportToCSV(filePath string) error {
 		if end > numRows {
 			end = numRows
 		}
-		go worker(start, end, errorChan)
+		wg.Add(1)
+		go worker(start, end)
 	}
 
-	// Wait for workers to complete
-	for g := 0; g < numGoroutines; g++ {
-		if err := <-errorChan; err != nil {
+	// Close the error channel once all workers are done
+	go func() {
+		wg.Wait()
+		close(errorChan)
+	}()
+
+	// Wait for errors or completion
+	for err := range errorChan {
+		if err != nil {
 			return err
 		}
 	}
