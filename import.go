@@ -75,7 +75,7 @@ func ImportCSV(filepath string) (DataFrame, error) {
 	wg.Wait()
 
 	result.Columns = columns
-	result.FixShape("")
+	result.FixShape()
 
 	return result, nil
 }

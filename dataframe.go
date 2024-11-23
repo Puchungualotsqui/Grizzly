@@ -56,19 +56,19 @@ func (df *DataFrame) AddSeries(series Series) error {
 	return nil
 }
 
-func (df *DataFrame) FixShape(defaultValue string) {
+func (df *DataFrame) FixShape() {
 	var size int
 	for _, series := range df.Columns {
 		size = MaxInt(size, series.GetLength())
 	}
 	for i := range df.Columns {
-		df.Columns[i].ResizeSeries(size, defaultValue)
+		df.Columns[i].ResizeSeries(size, "NaN")
 	}
 }
 
-func (df *DataFrame) AddSeriesForced(series Series, defaultValue string) {
+func (df *DataFrame) AddSeriesForced(series Series) {
 	df.Columns = append(df.Columns, series)
-	df.FixShape(defaultValue)
+	df.FixShape()
 }
 
 func (df *DataFrame) Print(min int, max int) error {

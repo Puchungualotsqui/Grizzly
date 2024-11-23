@@ -115,7 +115,7 @@ func (df *DataFrame) GetNonFloatValues() DataFrame {
 		}
 	}
 	resultDataframe = DataFrame{result}
-	resultDataframe.FixShape("")
+	resultDataframe.FixShape()
 	return resultDataframe
 }
 
@@ -137,6 +137,6 @@ func (df *DataFrame) GetUniqueValues() DataFrame {
 			tempFloat = nil
 		}
 	}
-	result.FixShape("")
+	result.FixShape()
 	return result
 }
