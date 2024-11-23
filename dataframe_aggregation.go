@@ -1,9 +1,13 @@
 package grizzly
 
-func (df *DataFrame) GenericCalculation(operation func(series Series) float64) DataFrame {
+import "fmt"
+
+func (df *DataFrame) GenericCalculation(operation func(series Series) (float64, error)) (DataFrame, error) {
 	var result []Series
 	var value float64
 	var newSeries Series
+	var err error
+
 	for _, series := range df.Columns {
 		if series.DataType != "float" {
 			newSeries = Series{
@@ -15,7 +19,10 @@ func (df *DataFrame) GenericCalculation(operation func(series Series) float64) D
 			result = append(result, newSeries)
 			continue
 		}
-		value = operation(series)
+		value, err = operation(series)
+		if err != nil {
+			return DataFrame{}, fmt.Errorf("error executing calculation")
+		}
 		newSeries = Series{
 			Name:     series.Name,
 			Float:    []float64{value},
@@ -24,62 +31,73 @@ func (df *DataFrame) GenericCalculation(operation func(series Series) float64) D
 		}
 		result = append(result, newSeries)
 	}
-	return DataFrame{result}
+	return DataFrame{result}, nil
 }
 
-func (df *DataFrame) GetMax() DataFrame {
-	return df.GenericCalculation(func(series Series) float64 {
+func (df *DataFrame) GetMax() (DataFrame, error) {
+	return df.GenericCalculation(func(series Series) (float64, error) {
 		return series.GetMax()
 	})
 }
 
-func (df *DataFrame) GetMin() DataFrame {
-	return df.GenericCalculation(func(series Series) float64 {
+func (df *DataFrame) GetMin() (DataFrame, error) {
+	return df.GenericCalculation(func(series Series) (float64, error) {
 		return series.GetMin()
 	})
 }
 
-func (df *DataFrame) GetMean() DataFrame {
-	return df.GenericCalculation(func(series Series) float64 {
+func (df *DataFrame) GetMean() (DataFrame, error) {
+	return df.GenericCalculation(func(series Series) (float64, error) {
 		return series.GetMean()
 	})
 }
 
-func (df *DataFrame) GetMedian() DataFrame {
-	return df.GenericCalculation(func(series Series) float64 {
+func (df *DataFrame) GetMedian() (DataFrame, error) {
+	return df.GenericCalculation(func(series Series) (float64, error) {
 		return series.GetMedian()
 	})
 }
 
-func (df *DataFrame) GetProduct() DataFrame {
-	return df.GenericCalculation(func(series Series) float64 {
+func (df *DataFrame) GetProduct() (DataFrame, error) {
+	return df.GenericCalculation(func(series Series) (float64, error) {
 		return series.GetProduct()
 	})
 }
 
-func (df *DataFrame) GetSum() DataFrame {
-	return df.GenericCalculation(func(series Series) float64 {
+func (df *DataFrame) GetSum() (DataFrame, error) {
+	return df.GenericCalculation(func(series Series) (float64, error) {
 		return series.GetSum()
 	})
 }
 
-func (df *DataFrame) GetVariance() DataFrame {
-	return df.GenericCalculation(func(series Series) float64 {
+func (df *DataFrame) GetVariance() (DataFrame, error) {
+	return df.GenericCalculation(func(series Series) (float64, error) {
 		return series.GetVariance()
 	})
 }
 
-func (df *DataFrame) CountWord(word string) DataFrame {
-	var columns []Series
-	var count []float64
+func (df *DataFrame) CountWord(word string) (DataFrame, error) {
+	var count float64
 	var result DataFrame
+	var err error
+	number, numberToo := TryConvertToFloat(word)
 	for _, series := range df.Columns {
-		count[0] = float64(series.CountWord(word))
-		columns = append(columns, NewFloatSeries(series.Name, count))
+		if series.DataType == "float" {
+			if numberToo == true {
+				count = ArrayFloatCountValue(series.Float, number)
+			} else {
+				count = 0
+			}
+		} else {
+			count = ArrayStringCountWord(series.String, word)
+		}
+		err = result.CreateFloatColumn(series.Name, []float64{count})
+		if err != nil {
+			return DataFrame{}, fmt.Errorf("failed to create column %q: %w", series.Name, err)
+		}
 	}
-	result.Columns = columns
-	result.FixShape("")
-	return result
+
+	return result, err
 }
 
 func (df *DataFrame) GetNonFloatValues() DataFrame {

@@ -10,12 +10,12 @@ func NewIntegerSet() *IntegerSet {
 	return &IntegerSet{set: make(map[int]struct{})}
 }
 
-// Add inserts an integer into the set
+// AddIntegerSet Add inserts an integer into the set
 func (s *IntegerSet) AddIntegerSet(value int) {
 	s.set[value] = struct{}{}
 }
 
-// Contains checks if an integer is in the set
+// SetContainsInteger Contains checks if an integer is in the set
 func (s *IntegerSet) SetContainsInteger(value int) bool {
 	_, exists := s.set[value]
 	return exists

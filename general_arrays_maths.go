@@ -97,9 +97,6 @@ func ArrayMax(data []float64) float64 {
 func ArrayMedian(nums []float64) float64 {
 	nums = ParallelSortFloat(nums)
 	n := len(nums)
-	if n == 0 {
-		panic("array cannot be empty")
-	}
 
 	if n%2 == 1 {
 		// Odd length, return the middle element

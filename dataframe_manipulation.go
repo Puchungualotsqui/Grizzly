@@ -1,23 +1,28 @@
 package grizzly
 
 import (
+	"fmt"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
 )
 
-func (df *DataFrame) FilterFloat(columnName string, condition func(value float64) bool) {
+func (df *DataFrame) FilterFloat(columnName string, condition func(value float64) bool) error {
 	var series *Series
-	series = df.GetColumnByName(columnName)
+	var err error
+	series, err = df.GetColumnByName(columnName)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve column to filter float %q: %w", columnName, err)
+	}
 
 	if series.DataType != "float" {
-		panic("FilterFloatSeries only works with float series")
+		return fmt.Errorf("column %q is not of type float; actual type is %q", columnName, series.DataType)
 	}
 
 	length := len(series.Float) // Use the actual length of the float slice
 	if length == 0 {
-		return
+		return nil
 	}
 
 	// Determine number of goroutines
@@ -60,19 +65,25 @@ func (df *DataFrame) FilterFloat(columnName string, condition func(value float64
 	go func() {
 		wg.Wait()
 	}()
+	return nil
 }
 
-func (df *DataFrame) FilterString(columnName string, condition func(value string) bool) {
+func (df *DataFrame) FilterString(columnName string, condition func(value string) bool) error {
 	var series *Series
-	series = df.GetColumnByName(columnName)
+	var err error
+	series, err = df.GetColumnByName(columnName)
+
+	if err != nil {
+		return fmt.Errorf("failed to retrieve column to filter string %q: %w", columnName, err)
+	}
 
 	if series.DataType != "float" {
-		panic("FilterFloatSeries only works with float series")
+		return fmt.Errorf("column %q is not of type string; actual type is %q", columnName, series.DataType)
 	}
 
 	length := len(series.Float) // Use the actual length of the float slice
 	if length == 0 {
-		return
+		return nil
 	}
 
 	// Determine number of goroutines
@@ -115,16 +126,25 @@ func (df *DataFrame) FilterString(columnName string, condition func(value string
 	go func() {
 		wg.Wait()
 	}()
+	return nil
 }
 
-func (df *DataFrame) ApplyFloat(columnName string, operation func(float64) float64) {
+func (df *DataFrame) ApplyFloat(columnName string, operation func(float64) float64) error {
+	var err error
 	// Retrieve the series
-	series := df.GetColumnByName(columnName)
+	series, err := df.GetColumnByName(columnName)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve column to apply float %q: %w", columnName, err)
+	}
+
+	if series.DataType != "float" {
+		return fmt.Errorf("column %q is not of type float; actual type is %q", columnName, series.DataType)
+	}
 
 	// Get the length of the data
 	numElements := len(series.Float)
 	if numElements == 0 {
-		return
+		return nil
 	}
 
 	// Determine the number of goroutines based on available CPUs
@@ -152,17 +172,25 @@ func (df *DataFrame) ApplyFloat(columnName string, operation func(float64) float
 
 	// Wait for all goroutines to complete
 	wg.Wait()
-	return
+	return nil
 }
 
-func (df *DataFrame) ApplyString(columnName string, operation func(string) string) {
+func (df *DataFrame) ApplyString(columnName string, operation func(string) string) error {
+	var err error
 	// Retrieve the series
-	series := df.GetColumnByName(columnName)
+	series, err := df.GetColumnByName(columnName)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve column to apply string %q: %w", columnName, err)
+	}
+
+	if series.DataType != "string" {
+		return fmt.Errorf("column %q is not of type string; actual type is %q", columnName, series.DataType)
+	}
 
 	// Get the length of the data
 	numElements := len(series.String)
 	if numElements == 0 {
-		return
+		return nil
 	}
 
 	// Determine the number of goroutines based on available CPUs
@@ -190,18 +218,31 @@ func (df *DataFrame) ApplyString(columnName string, operation func(string) strin
 
 	// Wait for all goroutines to complete
 	wg.Wait()
-	return
+	return nil
 }
 
-func (df *DataFrame) ReplaceWholeWord(columnName, old, new string) {
-	name := df.GetColumnByName(columnName)
-	name.ReplaceWholeWord(old, new)
-	return
+func (df *DataFrame) ReplaceWholeWord(columnName, old, new string) error {
+	// Retrieve the column by name
+	series, err := df.GetColumnByName(columnName)
+	if err != nil {
+		return fmt.Errorf("failed to replace whole word in column %q: %w", columnName, err)
+	}
+
+	// Perform the replacement
+	series.ReplaceWholeWord(old, new)
+	return nil
 }
 
-func (df *DataFrame) Replace(column, old, new string) {
-	name := df.GetColumnByName(column)
-	name.Replace(old, new)
+func (df *DataFrame) Replace(columnName, old, new string) error {
+	// Retrieve the column by name
+	series, err := df.GetColumnByName(columnName)
+	if err != nil {
+		return fmt.Errorf("failed to replace in column %q: %w", columnName, err)
+	}
+
+	// Perform the replacement
+	series.Replace(old, new)
+	return nil
 }
 
 func (df *DataFrame) DropByIndex(index ...int) {
@@ -226,20 +267,30 @@ func (df *DataFrame) DropByName(name ...string) {
 	return
 }
 
-func (df *DataFrame) ConvertStringToFloat(names ...string) {
+func (df *DataFrame) ConvertStringToFloat(names ...string) error {
+	var err error
+	var series *Series
 	for _, name := range names {
-		series := df.GetColumnByName(name)
+		series, err = df.GetColumnByName(name)
+		if err != nil {
+			return fmt.Errorf("failed to convert column %q from string to float: %w", name, err)
+		}
 		series.ConvertStringToFloat()
 	}
-	return
+	return nil
 }
 
-func (df *DataFrame) ConvertFloatToString(names ...string) {
+func (df *DataFrame) ConvertFloatToString(names ...string) error {
+	var err error
+	var series *Series
 	for _, name := range names {
-		series := df.GetColumnByName(name)
+		series, err = df.GetColumnByName(name)
+		if err != nil {
+			return fmt.Errorf("failed to convert column %q from float to string: %w", name, err)
+		}
 		series.ConvertFloatToString()
 	}
-	return
+	return nil
 }
 
 func (df *DataFrame) ConvertStringToFloatIndex(indexes ...int) {
@@ -258,14 +309,19 @@ func (df *DataFrame) ConvertFloatToStringIndex(indexes ...int) {
 	return
 }
 
-func (df *DataFrame) SplitColumn(columnName, delimiter string, newColumnNames []string) {
-	column := df.GetColumnByName(columnName)
+func (df *DataFrame) SplitColumn(columnName, delimiter string, newColumnNames []string) error {
+	var err error
+	var column *Series
+	column, err = df.GetColumnByName(columnName)
+	if err != nil {
+		return fmt.Errorf("failed to split column %q: %w", columnName, err)
+	}
 
 	if column.DataType == "float" {
-		panic("Just for string columns")
+		return fmt.Errorf("column %q cannot be split, select string column to split", columnName)
 	}
 	if len(newColumnNames) == 0 {
-		panic("No new column names provided")
+		return nil
 	}
 
 	numElements := column.GetLength()
@@ -313,21 +369,32 @@ func (df *DataFrame) SplitColumn(columnName, delimiter string, newColumnNames []
 	// Add new columns to the DataFrame
 	for j, newName := range newColumnNames {
 		newColumn := NewStringSeries(newName, splitValues[j])
-		df.AddSeries(newColumn)
+		err = df.AddSeries(newColumn)
+		if err != nil {
+			return fmt.Errorf("failed to split column %q: %w", newName, err)
+		}
 	}
 
-	return
+	return nil
 }
 
-func (df *DataFrame) JoinColumns(columnName1, columnName2, delimiter, newColumnName string) {
+func (df *DataFrame) JoinColumns(columnName1, columnName2, delimiter, newColumnName string) error {
+	var column1 *Series
+	var column2 *Series
+	var err error
 	// Retrieve the columns to be joined
-	column1 := df.GetColumnByName(columnName1)
-
-	column2 := df.GetColumnByName(columnName2)
+	column1, err = df.GetColumnByName(columnName1)
+	if err != nil {
+		return fmt.Errorf("failed to join columns %q: %w", columnName1, err)
+	}
+	column2, err = df.GetColumnByName(columnName2)
+	if err != nil {
+		return fmt.Errorf("failed to join columns %q: %w", columnName2, err)
+	}
 
 	// Validate that both columns are string columns
 	if column1.DataType != "string" || column2.DataType != "string" {
-		panic("JoinColumns is only supported for string columns")
+		return fmt.Errorf("JoinColumns is only supported for string columns")
 	}
 
 	numElements := column1.GetLength()
@@ -363,15 +430,17 @@ func (df *DataFrame) JoinColumns(columnName1, columnName2, delimiter, newColumnN
 
 	// Add the new joined column to the DataFrame
 	newColumn := NewStringSeries(newColumnName, joinedValues)
-	df.AddSeries(newColumn)
-
-	return
+	err = df.AddSeries(newColumn)
+	if err != nil {
+		return fmt.Errorf("failed to join columns %q: %w", newColumnName, err)
+	}
+	return nil
 }
 
-func (df *DataFrame) SliceRows(offset int, length int) {
+func (df *DataFrame) SliceRows(offset int, length int) error {
 	// Ensure offset is within bounds
-	if offset < 0 || offset >= len(df.Columns[0].Float) {
-		panic("offset out of range")
+	if offset < 0 || offset >= df.GetLength() {
+		return fmt.Errorf("offset out of range")
 	}
 
 	// Ensure length is within bounds
@@ -401,32 +470,35 @@ func (df *DataFrame) SliceRows(offset int, length int) {
 		newDf.Columns[i] = newSeries
 	}
 
-	return
+	return nil
 }
 
 func (df *DataFrame) SliceColumnsByIndex(indexes ...int) {
-	for i, _ := range df.Columns {
+	for i := range df.Columns {
 		if ArrayContainsInteger(indexes, i) {
 			df.Columns = append(df.Columns[:i], df.Columns[i+1:]...)
 		}
 	}
 }
 
-func (df *DataFrame) MergeDataFrame(otherDf DataFrame, defaultValue string) {
+func (df *DataFrame) MergeDataFrame(otherDf DataFrame, defaultValue string) error {
 	names := df.GetColumnNames()
 	otherNames := otherDf.GetColumnNames()
 	for _, name := range names {
 		if ArrayContainsString(otherNames, name) {
-			panic("Column already exists")
+			return fmt.Errorf("column already exists")
 		}
 	}
 	for _, column := range otherDf.Columns {
 		df.AddSeriesForced(column, defaultValue)
 	}
+	return nil
 }
 
-func (df *DataFrame) Concatenate(otherDf DataFrame, defaultValue string) {
+func (df *DataFrame) Concatenate(otherDf DataFrame, defaultValue string) error {
 	var newColumn Series
+	var err error
+
 	otherNames := otherDf.GetColumnNames()
 	names := df.GetColumnNames()
 	for _, name := range otherNames {
@@ -439,12 +511,24 @@ func (df *DataFrame) Concatenate(otherDf DataFrame, defaultValue string) {
 	var series *Series
 	var otherSeries *Series
 	for _, name := range names {
-		series = df.GetColumnByName(name)
-		otherSeries = df.GetColumnByName(name)
+		series, err = df.GetColumnByName(name)
+		if err != nil {
+			return fmt.Errorf("failed to concatenate dataframes %q: %w", name, err)
+		}
+		otherSeries, err = otherDf.GetColumnByName(name)
+		if err != nil {
+			return fmt.Errorf("failed to concatenate dataframes %q: %w", name, err)
+		}
 		if series.DataType == "float" && otherSeries.DataType == "string" {
-			df.ConvertFloatToString(name)
+			err = df.ConvertFloatToString(name)
+			if err != nil {
+				return fmt.Errorf("failed to concatenate dataframes %q: %w", name, err)
+			}
 		} else if series.DataType == "string" && otherSeries.DataType == "float" {
-			df.ConvertStringToFloat(name)
+			err = df.ConvertStringToFloat(name)
+			if err != nil {
+				return fmt.Errorf("failed to concatenate dataframes %q: %w", name, err)
+			}
 		}
 
 		if series.DataType == "float" {
@@ -453,31 +537,49 @@ func (df *DataFrame) Concatenate(otherDf DataFrame, defaultValue string) {
 			series.String = append(series.String, otherSeries.String...)
 		}
 	}
+	return nil
 }
 
-func (df *DataFrame) DuplicateColumn(names ...string) {
+func (df *DataFrame) DuplicateColumn(names ...string) error {
 	var ptr *Series
 	var series Series
+	var err error
 
 	for _, name := range names {
-		ptr = df.GetColumnByName(name)
+		ptr, err = df.GetColumnByName(name)
+		if err != nil {
+			return fmt.Errorf("failed to duplicate column %q: %w", name, err)
+		}
 		series = *ptr
 		series.Name = series.Name + strconv.Itoa(1)
-		df.AddSeries(series)
+		err = df.AddSeries(series)
+		if err != nil {
+			return fmt.Errorf("failed to duplicate column %q: %w", name, err)
+		}
 	}
-	return
+	return nil
 }
 
-func (df *DataFrame) MathBase(columnName1, columnName2, newColumnName string, operation func(float64, float64) float64) {
+func (df *DataFrame) MathBase(columnName1, columnName2, newColumnName string, operation func(float64, float64) float64) error {
 	var newColumn Series
-	series1 := df.GetColumnByName(columnName1)
-	series2 := df.GetColumnByName(columnName2)
+	var series1 *Series
+	var series2 *Series
+	var err error
+
+	series1, err = df.GetColumnByName(columnName1)
+	if err != nil {
+		return fmt.Errorf("failed to execute math operation %q: %w", columnName1, err)
+	}
+	series2, err = df.GetColumnByName(columnName2)
+	if err != nil {
+		return fmt.Errorf("failed to execute math operation %q: %w", columnName2, err)
+	}
 	if !(series1.DataType == "float") || !(series2.DataType == "float") {
-		panic("Math operation can just be done with float columns.")
+		return fmt.Errorf("math operation %q only supports floating point values", columnName1)
 	}
 	size := series1.GetLength()
 	if size == 0 {
-		return
+		return nil
 	}
 	newColumn = Series{
 		Name:     newColumnName,
@@ -512,56 +614,61 @@ func (df *DataFrame) MathBase(columnName1, columnName2, newColumnName string, op
 
 	wg.Wait()
 
-	df.AddSeries(newColumn)
-	return
+	err = df.AddSeries(newColumn)
+	if err != nil {
+		return fmt.Errorf("failed to execute math operation %q: %w", columnName1, err)
+	}
+	return nil
 }
 
-func (df *DataFrame) Sum(columnName1, columnName2, newColumnName string) {
-	df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x + y })
+func (df *DataFrame) Sum(columnName1, columnName2, newColumnName string) error {
+	return df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x + y })
 }
 
-func (df *DataFrame) Subtraction(columnName1, columnName2, newColumnName string) {
-	df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x - y })
+func (df *DataFrame) Subtraction(columnName1, columnName2, newColumnName string) error {
+	return df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x - y })
 }
 
-func (df *DataFrame) Multiplication(columnName1, columnName2, newColumnName string) {
-	df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x * y })
+func (df *DataFrame) Multiplication(columnName1, columnName2, newColumnName string) error {
+	return df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x * y })
 }
 
-func (df *DataFrame) Division(columnName1, columnName2, newColumnName string) {
-	df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x / y })
+func (df *DataFrame) Division(columnName1, columnName2, newColumnName string) error {
+	return df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x / y })
 }
 
-func (df *DataFrame) SetFloatValue(columnIndex, rowIndex int, newValue float64) {
+func (df *DataFrame) SetFloatValue(columnIndex, rowIndex int, newValue float64) error {
 	series := df.GetColumnByIndex(columnIndex)
 	if series.DataType != "float" {
-		panic("Type of column is not float")
+		return fmt.Errorf("column %q only supports floating point values", columnIndex)
 	}
 	series.Float[rowIndex] = newValue
+	return nil
 }
 
-func (df *DataFrame) SetStringValue(columnIndex, rowIndex int, newValue string) {
+func (df *DataFrame) SetStringValue(columnIndex, rowIndex int, newValue string) error {
 	series := df.GetColumnByIndex(columnIndex)
 	if series.DataType != "string" {
-		panic("Type of column is not string")
+		return fmt.Errorf("column %q only supports string values", columnIndex)
 	}
 	series.String[rowIndex] = newValue
+	return nil
 }
 
-func (df *DataFrame) GetFloatValue(columnIndex, rowIndex int) float64 {
+func (df *DataFrame) GetFloatValue(columnIndex, rowIndex int) (float64, error) {
 	series := df.GetColumnByIndex(columnIndex)
 	if series.DataType != "float" {
-		panic("Type of column is not float")
+		return 0, fmt.Errorf("column %q only supports floating point tasks", columnIndex)
 	}
-	return series.Float[rowIndex]
+	return series.Float[rowIndex], nil
 }
 
-func (df *DataFrame) GetStringValue(columnIndex, rowIndex int) string {
+func (df *DataFrame) GetStringValue(columnIndex, rowIndex int) (string, error) {
 	series := df.GetColumnByIndex(columnIndex)
 	if series.DataType != "string" {
-		panic("Type of column is not string")
+		return "", fmt.Errorf("column %q only supports string tasks", columnIndex)
 	}
-	return series.String[rowIndex]
+	return series.String[rowIndex], nil
 }
 
 func (df *DataFrame) Expand(size int, defaultFloat float64, defaultString string) {
@@ -583,13 +690,13 @@ func (df *DataFrame) Expand(size int, defaultFloat float64, defaultString string
 	}
 }
 
-func (df *DataFrame) SwapRows(index1, index2 int) {
+func (df *DataFrame) SwapRows(index1, index2 int) error {
 	size := df.GetLength()
 	if index1 < 0 || index1 >= size || index2 < 0 || index2 >= size {
-		panic("row index out of bounds")
+		return fmt.Errorf("row index out of bounds")
 	}
 	if index1 == index2 {
-		return
+		return nil
 	}
 	for i, series := range df.Columns {
 		if series.DataType == "float" {
@@ -598,15 +705,28 @@ func (df *DataFrame) SwapRows(index1, index2 int) {
 			df.Columns[i].String[index1], df.Columns[i].String[index2] = df.Columns[i].String[index2], df.Columns[i].String[index1]
 		}
 	}
-	return
+	return nil
 }
 
-// QuickSort sorts the array in place using the QuickSort algorithm
-func (df *DataFrame) Sort(columnName string, internal ...int) {
+// Sort QuickSort sorts the array in place using the QuickSort algorithm
+func (df *DataFrame) Sort(columnName string, internal ...int) error {
+	var index int
+	var err error
+
+	index, err = df.GetColumnIndexByName(columnName)
+	if err != nil {
+		return fmt.Errorf("error sorting %q: %w", columnName, err)
+	}
+	err = df.SortIndex(index, internal...)
+	return nil
+}
+
+// SortIndex QuickSort sorts the array in place using the QuickSort algorithm
+func (df *DataFrame) SortIndex(index int, internal ...int) error {
 	var low int
 	var high int
 	var p int
-	var index = df.GetColumnIndexByName(columnName)
+	var err error
 	if len(internal) == 0 {
 		low = 0
 		high = df.GetLength() - 1
@@ -617,73 +737,75 @@ func (df *DataFrame) Sort(columnName string, internal ...int) {
 	if low < high {
 		// Partition the array
 		if df.Columns[index].DataType == "float" {
-			p = df.PartitionFloat(index, low, high)
+			p, err = df.PartitionFloat(index, low, high)
+			if err != nil {
+				return fmt.Errorf("error sorting dataframe by %q column", df.Columns[index].Name)
+			}
 		} else {
-			p = df.PartitionString(index, low, high)
+			p, err = df.PartitionString(index, low, high)
+			if err != nil {
+				return fmt.Errorf("error sorting dataframe by %q column", df.Columns[index].Name)
+			}
 		}
 
-		// Recursively sort the subarrays
-		df.SortIndex(index, low, p-1)
-		df.SortIndex(index, p+1, high)
-	}
-}
-
-// QuickSort sorts the array in place using the QuickSort algorithm
-func (df *DataFrame) SortIndex(index int, internal ...int) {
-	var low int
-	var high int
-	var p int
-	if len(internal) == 0 {
-		low = 0
-		high = df.GetLength() - 1
-	} else {
-		low = internal[0]
-		high = internal[1]
-	}
-	if low < high {
-		// Partition the array
-		if df.Columns[index].DataType == "float" {
-			p = df.PartitionFloat(index, low, high)
-		} else {
-			p = df.PartitionString(index, low, high)
+		// Recursively sort the sub-arrays
+		err = df.SortIndex(index, low, p-1)
+		if err != nil {
+			return fmt.Errorf("error sorting dataframe")
 		}
-
-		// Recursively sort the subarrays
-		df.SortIndex(index, low, p-1)
-		df.SortIndex(index, p+1, high)
+		err = df.SortIndex(index, p+1, high)
+		if err != nil {
+			return fmt.Errorf("error sorting dataframe")
+		}
 	}
+	return nil
 }
 
 // PartitionString rearranges the array and returns the pivot index for strings
-func (df *DataFrame) PartitionString(index, low, high int) int {
+func (df *DataFrame) PartitionString(index, low, high int) (int, error) {
+	var err error
 	pivot := df.Columns[index].String[high] // Choose the last element as pivot
 	i := low - 1                            // Pointer for the smaller element
 
 	for j := low; j < high; j++ {
 		if df.Columns[index].String[j] < pivot {
 			i++
-			df.SwapRows(i, j) // Swap if element is smaller than pivot
+			err = df.SwapRows(i, j) // Swap if element is smaller than pivot
+			if err != nil {
+				return i, fmt.Errorf("failed to sort df: %w", err)
+			}
 		}
 	}
 
 	// Place the pivot in the correct position
-	df.SwapRows(i+1, high)
-	return i + 1
+	err = df.SwapRows(i+1, high)
+	if err != nil {
+		return i, fmt.Errorf("failed to sort df: %w", err)
+	}
+	return i + 1, nil
 }
 
-// partition rearranges the array and returns the pivot index
-func (df *DataFrame) PartitionFloat(index, low, high int) int {
+// PartitionFloat partition rearranges the array and returns the pivot index
+func (df *DataFrame) PartitionFloat(index, low, high int) (int, error) {
+	var err error
+
 	pivot := df.Columns[index].Float[high] // Choose the last element as pivot
 	i := low - 1                           // Pointer for the smaller element
 
 	for j := low; j < high; j++ {
 		if df.Columns[index].Float[j] < pivot {
 			i++
-			df.SwapRows(i, j) // Swap if element is smaller than pivot
+			err = df.SwapRows(i, j) // Swap if element is smaller than pivot
+			if err != nil {
+				return i, fmt.Errorf("failed to sort df: %w", err)
+			}
 		}
 	}
 
 	// Place the pivot in the correct position
-	df.SwapRows(i+1, high)
-	return i + 1
+	err = df.SwapRows(i+1, high)
+	if err != nil {
+		return i, fmt.Errorf("failed to sort df: %w", err)
+	}
+	return i + 1, nil
 }

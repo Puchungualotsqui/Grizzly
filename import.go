@@ -9,22 +9,22 @@ import (
 	"sync"
 )
 
-func ImportCSV(filepath string) DataFrame {
+func ImportCSV(filepath string) (DataFrame, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to open file: %v", err))
+		return DataFrame{}, fmt.Errorf("failed to open file: %v", err)
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	if err != nil {
-		panic(fmt.Sprintf("Failed to read CSV file: %v", err))
+		return DataFrame{}, fmt.Errorf("failed to read CSV file: %v", err)
 	}
 
 	size := len(records)
 	if size == 0 {
-		return DataFrame{}
+		return DataFrame{}, nil
 	}
 
 	headers := records[0]
@@ -77,13 +77,13 @@ func ImportCSV(filepath string) DataFrame {
 	result.Columns = columns
 	result.FixShape("")
 
-	return result
+	return result, nil
 }
 
-func ImportCSVOld(filepath string) DataFrame {
+func ImportCSVOld(filepath string) (DataFrame, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
-		panic("File was not found")
+		return DataFrame{}, fmt.Errorf("file was not found")
 	}
 	defer file.Close()
 
@@ -91,7 +91,7 @@ func ImportCSVOld(filepath string) DataFrame {
 	records, err := reader.ReadAll()
 
 	if len(records) == 0 {
-		return DataFrame{}
+		return DataFrame{}, nil
 	}
 
 	headers := records[0]
@@ -114,5 +114,5 @@ func ImportCSVOld(filepath string) DataFrame {
 		}
 	}
 
-	return DataFrame{Columns: columns}
+	return DataFrame{Columns: columns}, nil
 }

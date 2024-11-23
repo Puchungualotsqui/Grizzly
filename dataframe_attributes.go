@@ -34,13 +34,13 @@ func (df *DataFrame) ContainsColumn(name string) bool {
 	return ArrayContainsString(names, name)
 }
 
-func (df *DataFrame) GetColumnByName(name string) *Series {
+func (df *DataFrame) GetColumnByName(name string) (*Series, error) {
 	for i, series := range df.Columns {
 		if series.Name == name {
-			return &df.Columns[i]
+			return &df.Columns[i], nil
 		}
 	}
-	panic(fmt.Sprintf("%s not found", name))
+	return nil, fmt.Errorf("column %q not found", name)
 }
 
 func (df *DataFrame) GetColumnByIndex(index int) *Series {
@@ -51,34 +51,43 @@ func (df *DataFrame) GetColumnTypeIndex(index int) string {
 	return df.Columns[index].DataType
 }
 
-func (df *DataFrame) GetColumnType(name string) string {
-	series := df.GetColumnByName(name)
-	return series.DataType
+func (df *DataFrame) GetColumnType(name string) (string, error) {
+	series, err := df.GetColumnByName(name)
+	if err != nil {
+		return "", err
+	}
+	return series.DataType, nil
 }
 
 func (df *DataFrame) ColumnIsStringIndex(index int) bool {
 	return df.Columns[index].DataType == "string"
 }
 
-func (df *DataFrame) ColumnIsString(name string) bool {
-	series := df.GetColumnByName(name)
-	return series.DataType == "string"
+func (df *DataFrame) ColumnIsString(name string) (bool, error) {
+	series, err := df.GetColumnByName(name)
+	if err != nil {
+		return false, err
+	}
+	return series.DataType == "string", nil
 }
 
 func (df *DataFrame) ColumnIsFloatIndex(index int) bool {
 	return df.Columns[index].DataType == "float"
 }
 
-func (df *DataFrame) ColumnIsFloat(name string) bool {
-	series := df.GetColumnByName(name)
-	return series.DataType == "float"
+func (df *DataFrame) ColumnIsFloat(name string) (bool, error) {
+	series, err := df.GetColumnByName(name)
+	if err != nil {
+		return false, err
+	}
+	return series.DataType == "float", nil
 }
 
-func (df *DataFrame) GetColumnIndexByName(columnName string) int {
+func (df *DataFrame) GetColumnIndexByName(columnName string) (int, error) {
 	for i, series := range df.Columns {
 		if series.Name == columnName {
-			return i
+			return i, nil
 		}
 	}
-	panic(fmt.Sprintf("%s not found", columnName))
+	return -1, fmt.Errorf("column %q not found", columnName)
 }

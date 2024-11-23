@@ -30,6 +30,15 @@ func IsNameRepeated(seriesArray []Series, targetName string) bool {
 	return false
 }
 
+func TryConvertToFloat(s string) (float64, bool) {
+	// Attempt to parse the string as a float
+	result, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, false // Return false if conversion fails
+	}
+	return result, true // Return the parsed float and true if successful
+}
+
 func LengthOfFloat(value float64) (int, int) {
 	// Convert the float to a string
 	str := strconv.FormatFloat(value, 'f', -1, 64) // Convert with full precision

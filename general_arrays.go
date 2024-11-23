@@ -100,19 +100,96 @@ func ArrayStringBase(initValue float64, data []string, operation func(info strin
 	return resultChan
 }
 
-func ArrayCountWord(data []string, word string) float64 {
-	chain := ArrayStringBase(0, data, func(info string, result float64) float64 {
-		if info == word {
-			result++
-		}
-		return result
-	})
-	var result float64
+func ArrayStringCountWord(data []string, word string) float64 {
+	CPUNumbers := runtime.NumCPU()
 
-	for val := range chain {
-		result += val
+	chunkSize := len(data) / CPUNumbers
+	if len(data)%CPUNumbers != 0 {
+		chunkSize++ // Handle cases where data is not evenly divisible
 	}
-	return result
+
+	results := make(chan float64, CPUNumbers)
+	var wg sync.WaitGroup
+
+	// Worker function to count occurrences in a chunk
+	worker := func(start, end int) {
+		defer wg.Done()
+		var localCount float64
+		for i := start; i < end && i < len(data); i++ {
+			if data[i] == word {
+				localCount++
+			}
+		}
+		results <- localCount
+	}
+
+	// Divide the work into chunks and spawn goroutines
+	for i := 0; i < CPUNumbers; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		wg.Add(1)
+		go worker(start, end)
+	}
+
+	// Close the results channel once all goroutines finish
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// Aggregate results
+	var total float64
+	for count := range results {
+		total += count
+	}
+
+	return total
+}
+
+func ArrayFloatCountValue(data []float64, value float64) float64 {
+	CPUNumbers := runtime.NumCPU()
+
+	chunkSize := len(data) / CPUNumbers
+	if len(data)%CPUNumbers != 0 {
+		chunkSize++ // Handle cases where data is not evenly divisible
+	}
+
+	results := make(chan float64, CPUNumbers)
+	var wg sync.WaitGroup
+
+	// Worker function to count occurrences in a chunk
+	worker := func(start, end int) {
+		defer wg.Done()
+		var localCount float64
+		for i := start; i < end && i < len(data); i++ {
+			if data[i] == value {
+				localCount++
+			}
+		}
+		results <- localCount
+	}
+
+	// Divide the work into chunks and spawn goroutines
+	for i := 0; i < CPUNumbers; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		wg.Add(1)
+		go worker(start, end)
+	}
+
+	// Close the results channel once all goroutines finish
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// Aggregate results
+	var total float64
+	for count := range results {
+		total += count
+	}
+
+	return total
 }
 
 func ArrayCountFloatDuplicates(elements []float64) map[float64]int {
