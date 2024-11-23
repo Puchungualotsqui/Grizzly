@@ -89,50 +89,50 @@ df.PrintTail(5)
 Return a DataFrame with the max of each column.
 ```
 var max DataFrame
-max = df.GetMax()
+max, _ = df.GetMax()
 ```
 ### GetMin
 Return a DataFrame with the min of each column.
 ```
 var min DataFrame
-min = df.GetMin()
+min, _ = df.GetMin()
 ```
 ### GetMean
 Return a DataFrame with the mean of each column.
 ```
 var mean DataFrame
-mean = df.GetMean()
+mean, _ = df.GetMean()
 ```
 ### GetMedian
 Return a DataFrame with the median of each column.
 ```
 var median DataFrame
-median = df.GetMedian()
+median, _ = df.GetMedian()
 ```
 ### GetProduct
 Return a DataFrame with the product of each column.
 ```
 var product DataFrame
-product = df.GetProduct()
+product, _ = df.GetProduct()
 ```
 ### GetSum
 Return a DataFrame with the summation of each column.
 ```
 var sum DataFrame
-sum = df.GetSum()
+sum, _ = df.GetSum()
 ```
 ### GetVariance
 Return a DataFrame with the variance of each column.
 ```
 var variance DataFrame
-variance = df.GetVariance()
+variance, _ = df.GetVariance()
 ```
 ### CountWord
 Return a DataFrame with the count of the input string.
 - word *string*: word to count.
 ```
 var count DataFrame
-count = df.CountWord("hello")
+count, _ = df.CountWord("hello")
 ```
 ### GetNonFloatValues
 Return a DataFrame with the non float values of each column.
@@ -177,6 +177,20 @@ Return bool value as true if the column exists.
 var contains bool
 contains = df.ContainsColumn("last_names")
 ```
+### GetColumnByName
+Return a reference to the column with the given name.
+- name *string*: name of the column to return.
+```
+var column *Series
+column, _ = df.GetColumnByName("names")
+```
+### GetColumnByIndex
+Return a reference to the column of the given index.
+- index *int*: index of the asked column.
+```
+var column *Series
+column, _ = df.GetColumnByIndex(4)
+```
 ### GetColumnTypeIndex
 Return an string with the type of data of the column.
 - index *int*: the index of the column to get the data type of it.
@@ -189,14 +203,14 @@ Return an string with the type of data of the column.
 - name *string*: the name of the column to get the data type of it.
 ```
 var dataType string
-dataType = df.GetColumnType("name")
+dataType, _ = df.GetColumnType("name")
 ```
 ### ColumnIsStringIndex
 Return a bool true or false depending if the data type of the selected column is string.
 - index *int*: the index of the column to verify if is string type.
 ```
 var isString bool
-isString = df.ColumnIsStringIndex(0)
+isString, _ = df.ColumnIsStringIndex(0)
 ```
 ### ColumnIsString
 Return a bool true or false depending if the data type of the selected column is string.
@@ -217,14 +231,14 @@ Return a bool true or false depending if the data type of the selected column is
 - name *string*: the name of the column to verify if is float type.
 ```
 var isFloat bool
-isFloat = df.ColumnIsFloat(0)
+isFloat, _ = df.ColumnIsFloat(0)
 ```
 ### GetColumnIndexByName
 Return the index of the column by name.
 - columnName *string*: column name
 ```
 var index int
-index = df.GetColumnIndexByName("name")
+index, _ = df.GetColumnIndexByName("name")
 ```
 ## DataFrame Manipulation
 ### FilterFloat
@@ -478,7 +492,7 @@ df.SortIndex(0)
 Import CSV file as Grizzly DataFrame.
 - filepath *string*: file path of the csv file.
 ```
-df = grizzly.ImportCSV("example.csv")
+df, _ = grizzly.ImportCSV("example.csv")
 ```
 ## Output
 ### ExportToCSV
