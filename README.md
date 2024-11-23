@@ -10,7 +10,7 @@ Unlike many other libraries, Grizzly enforces a more rigid approach to DataFrame
 - Typed DataFrame (float64 and string)
 - Data aggregation and statistical functions
 - Data attributes and metadata handling
-- Import and export utilities for common data formats
+- Import and export utilities
   
 ### Installation
 To install the package, use:
