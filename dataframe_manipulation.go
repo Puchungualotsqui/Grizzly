@@ -269,26 +269,28 @@ func (df *DataFrame) DropByName(name ...string) {
 
 func (df *DataFrame) ConvertStringToFloat(names ...string) error {
 	var err error
-	var series *Series
+	var index int
+
 	for _, name := range names {
-		series, err = df.GetColumnByName(name)
+		index, err = df.GetColumnIndexByName(name)
 		if err != nil {
 			return fmt.Errorf("failed to convert column %q from string to float: %w", name, err)
 		}
-		series.ConvertStringToFloat()
+		df.ConvertStringToFloatIndex(index)
 	}
 	return nil
 }
 
 func (df *DataFrame) ConvertFloatToString(names ...string) error {
 	var err error
-	var series *Series
+	var index int
+
 	for _, name := range names {
-		series, err = df.GetColumnByName(name)
+		index, err = df.GetColumnIndexByName(name)
 		if err != nil {
 			return fmt.Errorf("failed to convert column %q from float to string: %w", name, err)
 		}
-		series.ConvertFloatToString()
+		df.ConvertFloatToStringIndex(index)
 	}
 	return nil
 }

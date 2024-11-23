@@ -288,6 +288,13 @@ func ArrayResizeString(input []string, targetLength int, defaultValue string) []
 	return input
 }
 
+func ArrayResizeFloat(input []float64, targetLength int, defaultValue float64) []float64 {
+	for len(input) < targetLength {
+		input = append(input, defaultValue)
+	}
+	return input
+}
+
 func ArrayUniqueValuesFloat(arr []float64) []float64 {
 	if len(arr) == 0 {
 		return []float64{}

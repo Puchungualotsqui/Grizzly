@@ -2,6 +2,7 @@ package grizzly
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 )
 
@@ -31,8 +32,12 @@ func NewFloatSeries(name string, Float []float64) Series {
 }
 
 func (series *Series) ResizeSeries(targetLength int, defaultValue string) {
-	series.ConvertFloatToString()
-	series.String = ArrayResizeString(series.String, targetLength, defaultValue)
+	if series.DataType == "string" {
+		series.String = ArrayResizeString(series.String, targetLength, defaultValue)
+		return
+	} else {
+		series.Float = ArrayResizeFloat(series.Float, targetLength, math.NaN())
+	}
 }
 
 func (series *Series) Print(max int) {
