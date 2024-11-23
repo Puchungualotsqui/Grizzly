@@ -480,3 +480,15 @@ Import CSV file as Grizzly DataFrame.
 ```
 df = grizzly.ImportCSV("example.csv")
 ```
+## Output
+### ExportToCSV
+Export Dataframe as a CSV file.
+- filepath *string*: file path for the csv file.
+```
+df.ExportToCSV("example.csv")
+```
+### ExportToCSVSimple
+Export Dataframe as a CSV file. It is better for small Dataframes.
+```
+df.ExportToCSVSimple("example.csv")
+```
