@@ -1,6 +1,8 @@
 package grizzly
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func (df *DataFrame) GenericCalculation(operation func(series Series) (float64, error)) (DataFrame, error) {
 	var result []Series
