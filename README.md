@@ -143,7 +143,14 @@ nonFloat = df.GetNonFloatValues()
 ### GetUniqueValues
 Return a DataFrame with the unique values of each column.
 ```
-df.GetUniqueValues()
+var uniqueValues DataFrame
+uniqueValues = df.GetUniqueValues()
+```
+### CountNaNValues
+Return a DataFrame with the NaN values of each column.
+```
+var nanCount DataFrame
+nanCount = df.CountNaNValues()
 ```
 ## DataFrame Attributes
 ### GetLength
