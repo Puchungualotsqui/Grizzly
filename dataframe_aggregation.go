@@ -2,6 +2,7 @@ package grizzly
 
 import (
 	"fmt"
+	"math"
 )
 
 func (df *DataFrame) GenericCalculation(operation func(series Series) (float64, error)) (DataFrame, error) {
@@ -139,4 +140,22 @@ func (df *DataFrame) GetUniqueValues() DataFrame {
 	}
 	result.FixShape()
 	return result
+}
+
+func (df *DataFrame) CountNaNValues() DataFrame {
+	var count float64
+	series := make([]Series, df.GetLength())
+	for i, column := range df.Columns {
+		series[i].DataType = "float"
+		series[i].Name = column.Name
+		if column.DataType == "float" {
+			count = ArrayFloatCountValue(column.Float, math.NaN())
+			series[i].Float = []float64{count}
+
+		} else {
+			count = ArrayStringCountWord(column.String, "NaN")
+			series[i].Float = []float64{count}
+		}
+	}
+	return DataFrame{series}
 }
