@@ -483,7 +483,7 @@ func (df *DataFrame) SliceColumnsByIndex(indexes ...int) {
 	}
 }
 
-func (df *DataFrame) MergeDataFrame(otherDf DataFrame, defaultValue string) error {
+func (df *DataFrame) MergeDataFrame(otherDf DataFrame) error {
 	names := df.GetColumnNames()
 	otherNames := otherDf.GetColumnNames()
 	for _, name := range names {
@@ -492,12 +492,12 @@ func (df *DataFrame) MergeDataFrame(otherDf DataFrame, defaultValue string) erro
 		}
 	}
 	for _, column := range otherDf.Columns {
-		df.AddSeriesForced(column, defaultValue)
+		df.AddSeriesForced(column)
 	}
 	return nil
 }
 
-func (df *DataFrame) Concatenate(otherDf DataFrame, defaultValue string) error {
+func (df *DataFrame) Concatenate(otherDf DataFrame) error {
 	var newColumn Series
 	var err error
 
@@ -506,7 +506,7 @@ func (df *DataFrame) Concatenate(otherDf DataFrame, defaultValue string) error {
 	for _, name := range otherNames {
 		if !ArrayContainsString(names, name) {
 			newColumn = NewStringSeries(name, []string{})
-			df.AddSeriesForced(newColumn, defaultValue)
+			df.AddSeriesForced(newColumn)
 		}
 	}
 	names = append(names, otherNames...)
