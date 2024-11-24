@@ -131,13 +131,13 @@ func (df *DataFrame) ExportToCSVSimple(filePath string) error {
 				if i < len(col.Float) {
 					row[j] = strconv.FormatFloat(col.Float[i], 'f', -1, 64)
 				} else {
-					row[j] = ""
+					row[j] = "NaN"
 				}
 			case "string":
 				if i < len(col.String) {
 					row[j] = col.String[i]
 				} else {
-					row[j] = ""
+					row[j] = "NaN"
 				}
 			}
 		}

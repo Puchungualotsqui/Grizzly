@@ -1,6 +1,7 @@
 package grizzly
 
 import (
+	"math"
 	"runtime"
 	"strconv"
 	"sync"
@@ -163,6 +164,52 @@ func ArrayFloatCountValue(data []float64, value float64) float64 {
 		var localCount float64
 		for i := start; i < end && i < len(data); i++ {
 			if data[i] == value {
+				localCount++
+			}
+		}
+		results <- localCount
+	}
+
+	// Divide the work into chunks and spawn goroutines
+	for i := 0; i < CPUNumbers; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		wg.Add(1)
+		go worker(start, end)
+	}
+
+	// Close the results channel once all goroutines finish
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// Aggregate results
+	var total float64
+	for count := range results {
+		total += count
+	}
+
+	return total
+}
+
+func ArrayFloatCountNaNValue(data []float64) float64 {
+	CPUNumbers := runtime.NumCPU()
+
+	chunkSize := len(data) / CPUNumbers
+	if len(data)%CPUNumbers != 0 {
+		chunkSize++ // Handle cases where data is not evenly divisible
+	}
+
+	results := make(chan float64, CPUNumbers)
+	var wg sync.WaitGroup
+
+	// Worker function to count occurrences in a chunk
+	worker := func(start, end int) {
+		defer wg.Done()
+		var localCount float64
+		for i := start; i < end && i < len(data); i++ {
+			if math.IsNaN(data[i]) {
 				localCount++
 			}
 		}
