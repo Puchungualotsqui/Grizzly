@@ -30,7 +30,7 @@ func ImportCSV(filepath string) (DataFrame, error) {
 	headers := records[0]
 	rows := records[1:]
 	numCols := len(headers)
-	numRows := size - 1 // Exclude header row
+	numRows := len(rows)
 	columns := make([]Series, numCols)
 
 	// Initialize Series for each header
@@ -39,7 +39,6 @@ func ImportCSV(filepath string) (DataFrame, error) {
 			Name:     header,
 			DataType: "string",                // Default type
 			String:   make([]string, numRows), // Preallocate with length
-			Float:    make([]float64, numRows),
 		}
 	}
 
@@ -48,6 +47,15 @@ func ImportCSV(filepath string) (DataFrame, error) {
 	// Determine the number of goroutines based on available CPUs
 	numGoroutines := runtime.NumCPU()
 	chunkSize := (numRows + numGoroutines - 1) / numGoroutines
+
+	// Create local trackers for each goroutine
+	localTrackers := make([][]bool, numGoroutines)
+	for g := 0; g < numGoroutines; g++ {
+		localTrackers[g] = make([]bool, numCols)
+		for i := range localTrackers[g] {
+			localTrackers[g][i] = true
+		}
+	}
 
 	var wg sync.WaitGroup
 
@@ -62,17 +70,49 @@ func ImportCSV(filepath string) (DataFrame, error) {
 		}
 
 		wg.Add(1)
-		go func(start, end int) {
+		go func(start, end, g int) {
 			defer wg.Done()
+			localTracker := localTrackers[g] // Each goroutine uses its own tracker
 			for j := start; j < end; j++ {
 				for i := range columns {
-					columns[i].String[j] = rows[j][i]
+					stringValue := ""
+					if i < len(rows[j]) {
+						stringValue = rows[j][i]
+					}
+					if stringValue == "" {
+						stringValue = "NaN"
+					}
+					if localTracker[i] {
+						if _, err := strconv.ParseFloat(stringValue, 64); err != nil {
+							localTracker[i] = false
+						}
+					}
+					columns[i].String[j] = stringValue
 				}
 			}
-		}(start, end)
+		}(start, end, g)
 	}
 
 	wg.Wait()
+
+	// Merge local trackers into a global tracker
+	globalTracker := make([]bool, numCols)
+	for i := 0; i < numCols; i++ {
+		globalTracker[i] = true
+		for g := 0; g < numGoroutines; g++ {
+			if !localTrackers[g][i] {
+				globalTracker[i] = false
+				break
+			}
+		}
+	}
+
+	// Convert columns to float if they are numeric
+	for i := range columns {
+		if globalTracker[i] {
+			columns[i].ConvertStringToFloat()
+		}
+	}
 
 	result.Columns = columns
 	result.FixShape()

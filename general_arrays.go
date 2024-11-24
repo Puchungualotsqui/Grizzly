@@ -315,16 +315,45 @@ func ArrayContainsString(arr []string, target string) bool {
 	return false // Element not found
 }
 
+// ArrayGetNonFloatValues identifies non-convertible float values using goroutines
 func ArrayGetNonFloatValues(input []string) []string {
+	numGoroutines := runtime.NumCPU() // Number of goroutines to use
+	chunkSize := (len(input) + numGoroutines - 1) / numGoroutines
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex // Protects shared access to `nonConvertible`
 	var nonConvertible []string
 
-	for _, str := range input {
-		_, err := strconv.ParseFloat(str, 64)
-		if err != nil {
-			nonConvertible = append(nonConvertible, str) // Collect non-convertible elements
+	// Launch goroutines to process chunks
+	for g := 0; g < numGoroutines; g++ {
+		start := g * chunkSize
+		end := start + chunkSize
+		if start >= len(input) {
+			break
 		}
+		if end > len(input) {
+			end = len(input)
+		}
+
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			localNonConvertible := []string{} // Local slice to collect results
+
+			for _, str := range input[start:end] {
+				if _, err := strconv.ParseFloat(str, 64); err != nil {
+					localNonConvertible = append(localNonConvertible, str)
+				}
+			}
+
+			// Append results to the shared slice
+			mu.Lock()
+			nonConvertible = append(nonConvertible, localNonConvertible...)
+			mu.Unlock()
+		}(start, end)
 	}
 
+	wg.Wait()
 	return nonConvertible
 }
 
