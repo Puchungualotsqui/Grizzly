@@ -585,7 +585,7 @@ func (df *DataFrame) MathBase(columnName1, columnName2, newColumnName string, op
 	}
 	newColumn = Series{
 		Name:     newColumnName,
-		DataType: "string",          // Default type
+		DataType: "float",           // Default type
 		String:   make([]string, 0), // Preallocate with length
 		Float:    make([]float64, size),
 	}
