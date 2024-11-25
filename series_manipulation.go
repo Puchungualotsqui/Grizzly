@@ -159,7 +159,23 @@ func (series *Series) ReplaceWholeWord(old, new string) {
 }
 
 func (series *Series) Replace(old, new string) {
-	if series.DataType == "float" || series.GetLength() == 0 {
+	if series.GetLength() == 0 {
+		return
+	}
+	var errorCount int
+	var err error
+	var numberOld float64
+	var numberNew float64
+
+	numberOld, err = strconv.ParseFloat(old, 64)
+	if err != nil {
+		errorCount++
+	}
+	numberNew, err = strconv.ParseFloat(new, 64)
+	if err != nil {
+		errorCount++
+	}
+	if series.DataType == "float" && !(errorCount == 0) {
 		return
 	}
 	numGoroutines := runtime.NumCPU()
@@ -167,20 +183,41 @@ func (series *Series) Replace(old, new string) {
 	chunkSize := (length + numGoroutines - 1) / numGoroutines
 	var wg sync.WaitGroup
 
-	for i := 0; i < numGoroutines; i++ {
-		start := i * chunkSize
-		end := start + chunkSize
-		if end > length {
-			end = length
-		}
-		wg.Add(1)
-		go func(start, end int) {
-			defer wg.Done()
-			for j := start; j < end; j++ {
-				series.String[j] = strings.ReplaceAll(series.String[j], old, new)
+	if series.DataType == "string" {
+		for i := 0; i < numGoroutines; i++ {
+			start := i * chunkSize
+			end := start + chunkSize
+			if end > length {
+				end = length
 			}
-		}(start, end)
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for j := start; j < end; j++ {
+					series.String[j] = strings.ReplaceAll(series.String[j], old, new)
+				}
+			}(start, end)
+		}
+		wg.Wait() // Wait for all goroutines to complete
+		return
+	} else {
+		for i := 0; i < numGoroutines; i++ {
+			start := i * chunkSize
+			end := start + chunkSize
+			if end > length {
+				end = length
+			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for j := start; j < end; j++ {
+					if series.Float[j] == numberOld {
+						series.Float[j] = numberNew
+					}
+				}
+			}(start, end)
+		}
+		wg.Wait() // Wait for all goroutines to complete
+		return
 	}
-	wg.Wait() // Wait for all goroutines to complete
-	return
 }

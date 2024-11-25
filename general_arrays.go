@@ -29,7 +29,9 @@ func ArrayFloatBase(initValue float64, data []float64, operation func(info float
 		result := initValue
 		// Always starts from second value to calculate Mean Correctly
 		for i := start; i < end; i++ {
-			result = operation(data[i], result)
+			if !math.IsNaN(data[i]) {
+				result = operation(data[i], result)
+			}
 		}
 		resultChan <- result
 	}

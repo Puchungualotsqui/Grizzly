@@ -233,15 +233,20 @@ func (df *DataFrame) ReplaceWholeWord(columnName, old, new string) error {
 	return nil
 }
 
-func (df *DataFrame) Replace(columnName, old, new string) error {
+func (df *DataFrame) Replace(columnName string, old, new any) error {
 	// Retrieve the column by name
 	series, err := df.GetColumnByName(columnName)
 	if err != nil {
 		return fmt.Errorf("failed to replace in column %q: %w", columnName, err)
 	}
+	oldString, err := InterfaceConvertToString(old)
+	newString, err := InterfaceConvertToString(new)
+	if err != nil {
+		return fmt.Errorf("failed to replace in column %q: %w", columnName, err)
+	}
 
 	// Perform the replacement
-	series.Replace(old, new)
+	series.Replace(oldString, newString)
 	return nil
 }
 
