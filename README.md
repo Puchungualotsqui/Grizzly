@@ -440,7 +440,7 @@ Change the value of a row of a string column.
 ```
 df.SetStringValue(2,100,"sebastian")
 ```
-## SetValue
+### SetValue
 Change the value of a row of an column. It will try to convert it to the type of the column.
 - identifier *any*: index or name of the column to change value.
 - rowIndex *int*: index of the row to change the value.
