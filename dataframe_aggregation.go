@@ -15,7 +15,7 @@ func (df *DataFrame) GenericCalculation(operation func(series Series) (float64, 
 			newSeries = Series{
 				Name:     series.Name,
 				Float:    []float64{},
-				String:   []string{""},
+				String:   []string{"NaN"},
 				DataType: "string",
 			}
 			result = append(result, newSeries)
