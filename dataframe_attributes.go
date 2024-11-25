@@ -1,6 +1,8 @@
 package grizzly
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func (df *DataFrame) GetLength() int {
 	if len(df.Columns) == 0 {
@@ -43,40 +45,60 @@ func (df *DataFrame) GetColumnByName(name string) (*Series, error) {
 	return nil, fmt.Errorf("column %q not found", name)
 }
 
-func (df *DataFrame) GetColumnByIndex(index int) *Series {
-	return &df.Columns[index]
+func (df *DataFrame) GetColumnByIndex(index int) (*Series, error) {
+	if index < 0 || index >= len(df.Columns) {
+		return nil, fmt.Errorf("index %d is out of bounds", index)
+	}
+	return &df.Columns[index], nil
 }
 
-func (df *DataFrame) GetColumnTypeIndex(index int) string {
-	return df.Columns[index].DataType
+func (df *DataFrame) GetColumnDynamic(identifier any) (*Series, error) {
+	var possibleName string
+	var possibleIndex int
+	var byIndex bool
+	var err error
+	var result *Series
+
+	switch v := identifier.(type) {
+	case int:
+		byIndex = true
+		possibleIndex = v
+	default:
+		byIndex = false
+		possibleName, err = InterfaceConvertToString(identifier)
+	}
+	if byIndex {
+		result, err = df.GetColumnByIndex(possibleIndex)
+		if err != nil {
+			return nil, err
+		}
+		return result, nil
+	}
+	result, err = df.GetColumnByName(possibleName)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
-func (df *DataFrame) GetColumnType(name string) (string, error) {
-	series, err := df.GetColumnByName(name)
+func (df *DataFrame) GetColumnType(identifier any) (string, error) {
+	series, err := df.GetColumnDynamic(identifier)
 	if err != nil {
 		return "", err
 	}
 	return series.DataType, nil
 }
 
-func (df *DataFrame) ColumnIsStringIndex(index int) bool {
-	return df.Columns[index].DataType == "string"
-}
-
-func (df *DataFrame) ColumnIsString(name string) (bool, error) {
-	series, err := df.GetColumnByName(name)
+func (df *DataFrame) ColumnIsString(identifier any) (bool, error) {
+	series, err := df.GetColumnDynamic(identifier)
 	if err != nil {
 		return false, err
 	}
 	return series.DataType == "string", nil
 }
 
-func (df *DataFrame) ColumnIsFloatIndex(index int) bool {
-	return df.Columns[index].DataType == "float"
-}
-
-func (df *DataFrame) ColumnIsFloat(name string) (bool, error) {
-	series, err := df.GetColumnByName(name)
+func (df *DataFrame) ColumnIsFloat(identifier any) (bool, error) {
+	series, err := df.GetColumnDynamic(identifier)
 	if err != nil {
 		return false, err
 	}

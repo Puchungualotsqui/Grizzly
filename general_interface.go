@@ -1,6 +1,9 @@
 package grizzly
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 func InterfaceConvertToString(value any) (string, error) {
 	switch v := value.(type) {
@@ -13,4 +16,22 @@ func InterfaceConvertToString(value any) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported type: %T", v)
 	}
+}
+
+func InterfaceConvertToFloat(value any) (float64, error) {
+	switch v := value.(type) {
+	case float64:
+		return v, nil
+	case float32:
+		return float64(v), nil
+	case int:
+		return float64(v), nil
+	case int32:
+		return float64(v), nil
+	case int64:
+		return float64(v), nil
+	case string:
+		return strconv.ParseFloat(v, 64)
+	}
+	return 0, fmt.Errorf("unsupported type: %T", value)
 }

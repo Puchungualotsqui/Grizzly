@@ -8,16 +8,16 @@ import (
 	"sync"
 )
 
-func (df *DataFrame) FilterFloat(columnName string, condition func(value float64) bool) error {
+func (df *DataFrame) FilterFloat(identifier any, condition func(value float64) bool) error {
 	var series *Series
 	var err error
-	series, err = df.GetColumnByName(columnName)
+	series, err = df.GetColumnDynamic(identifier)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve column to filter float %q: %w", columnName, err)
+		return fmt.Errorf("failed to retrieve column to filter float %v: %w", identifier, err)
 	}
 
 	if series.DataType != "float" {
-		return fmt.Errorf("column %q is not of type float; actual type is %q", columnName, series.DataType)
+		return fmt.Errorf("column %v is not of type float; actual type is %q", identifier, series.DataType)
 	}
 
 	length := len(series.Float) // Use the actual length of the float slice
@@ -68,17 +68,17 @@ func (df *DataFrame) FilterFloat(columnName string, condition func(value float64
 	return nil
 }
 
-func (df *DataFrame) FilterString(columnName string, condition func(value string) bool) error {
+func (df *DataFrame) FilterString(identifier any, condition func(value string) bool) error {
 	var series *Series
 	var err error
-	series, err = df.GetColumnByName(columnName)
+	series, err = df.GetColumnDynamic(identifier)
 
 	if err != nil {
-		return fmt.Errorf("failed to retrieve column to filter string %q: %w", columnName, err)
+		return fmt.Errorf("failed to retrieve column to filter string %v: %w", identifier, err)
 	}
 
 	if series.DataType != "float" {
-		return fmt.Errorf("column %q is not of type string; actual type is %q", columnName, series.DataType)
+		return fmt.Errorf("column %v is not of type string; actual type is %q", identifier, series.DataType)
 	}
 
 	length := len(series.Float) // Use the actual length of the float slice
@@ -129,16 +129,16 @@ func (df *DataFrame) FilterString(columnName string, condition func(value string
 	return nil
 }
 
-func (df *DataFrame) ApplyFloat(columnName string, operation func(float64) float64) error {
+func (df *DataFrame) ApplyFloat(identifier any, operation func(float64) float64) error {
 	var err error
 	// Retrieve the series
-	series, err := df.GetColumnByName(columnName)
+	series, err := df.GetColumnDynamic(identifier)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve column to apply float %q: %w", columnName, err)
+		return fmt.Errorf("failed to retrieve column to apply float %v: %w", identifier, err)
 	}
 
 	if series.DataType != "float" {
-		return fmt.Errorf("column %q is not of type float; actual type is %q", columnName, series.DataType)
+		return fmt.Errorf("column %v is not of type float; actual type is %q", identifier, series.DataType)
 	}
 
 	// Get the length of the data
@@ -175,16 +175,16 @@ func (df *DataFrame) ApplyFloat(columnName string, operation func(float64) float
 	return nil
 }
 
-func (df *DataFrame) ApplyString(columnName string, operation func(string) string) error {
+func (df *DataFrame) ApplyString(identifier any, operation func(string) string) error {
 	var err error
 	// Retrieve the series
-	series, err := df.GetColumnByName(columnName)
+	series, err := df.GetColumnDynamic(identifier)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve column to apply string %q: %w", columnName, err)
+		return fmt.Errorf("failed to retrieve column to apply string %v: %w", identifier, err)
 	}
 
 	if series.DataType != "string" {
-		return fmt.Errorf("column %q is not of type string; actual type is %q", columnName, series.DataType)
+		return fmt.Errorf("column %v is not of type string; actual type is %q", identifier, series.DataType)
 	}
 
 	// Get the length of the data
@@ -221,11 +221,11 @@ func (df *DataFrame) ApplyString(columnName string, operation func(string) strin
 	return nil
 }
 
-func (df *DataFrame) ReplaceWholeWord(columnName, old, new string) error {
+func (df *DataFrame) ReplaceWholeWord(identifier any, old, new string) error {
 	// Retrieve the column by name
-	series, err := df.GetColumnByName(columnName)
+	series, err := df.GetColumnDynamic(identifier)
 	if err != nil {
-		return fmt.Errorf("failed to replace whole word in column %q: %w", columnName, err)
+		return fmt.Errorf("failed to replace whole word in column %v: %w", identifier, err)
 	}
 
 	// Perform the replacement
@@ -233,16 +233,16 @@ func (df *DataFrame) ReplaceWholeWord(columnName, old, new string) error {
 	return nil
 }
 
-func (df *DataFrame) Replace(columnName string, old, new any) error {
+func (df *DataFrame) Replace(identifier any, old, new any) error {
 	// Retrieve the column by name
-	series, err := df.GetColumnByName(columnName)
+	series, err := df.GetColumnDynamic(identifier)
 	if err != nil {
-		return fmt.Errorf("failed to replace in column %q: %w", columnName, err)
+		return fmt.Errorf("failed to replace in column %v: %w", identifier, err)
 	}
 	oldString, err := InterfaceConvertToString(old)
 	newString, err := InterfaceConvertToString(new)
 	if err != nil {
-		return fmt.Errorf("failed to replace in column %q: %w", columnName, err)
+		return fmt.Errorf("failed to replace in column %v: %w", identifier, err)
 	}
 
 	// Perform the replacement
@@ -272,60 +272,44 @@ func (df *DataFrame) DropByName(name ...string) {
 	return
 }
 
-func (df *DataFrame) ConvertStringToFloat(names ...string) error {
+func (df *DataFrame) ConvertStringToFloat(identifiers ...any) error {
+	var check *Series
 	var err error
-	var index int
 
-	for _, name := range names {
-		index, err = df.GetColumnIndexByName(name)
+	for _, identifier := range identifiers {
+		check, err = df.GetColumnDynamic(identifier)
 		if err != nil {
-			return fmt.Errorf("failed to convert column %q from string to float: %w", name, err)
+			return fmt.Errorf("failed to convert column %v from string to float: %w", identifier, err)
 		}
-		df.ConvertStringToFloatIndex(index)
+		check.ConvertStringToFloat()
 	}
 	return nil
 }
 
-func (df *DataFrame) ConvertFloatToString(names ...string) error {
+func (df *DataFrame) ConvertFloatToString(identifiers ...any) error {
+	var check *Series
 	var err error
-	var index int
 
-	for _, name := range names {
-		index, err = df.GetColumnIndexByName(name)
+	for _, identifier := range identifiers {
+		check, err = df.GetColumnDynamic(identifier)
 		if err != nil {
-			return fmt.Errorf("failed to convert column %q from float to string: %w", name, err)
+			return fmt.Errorf("failed to convert column %v from string to float: %w", identifier, err)
 		}
-		df.ConvertFloatToStringIndex(index)
+		check.ConvertFloatToString()
 	}
 	return nil
 }
 
-func (df *DataFrame) ConvertStringToFloatIndex(indexes ...int) {
-	for _, index := range indexes {
-		series := df.GetColumnByIndex(index)
-		series.ConvertStringToFloat()
-	}
-	return
-}
-
-func (df *DataFrame) ConvertFloatToStringIndex(indexes ...int) {
-	for _, index := range indexes {
-		series := df.GetColumnByIndex(index)
-		series.ConvertFloatToString()
-	}
-	return
-}
-
-func (df *DataFrame) SplitColumn(columnName, delimiter string, newColumnNames []string) error {
+func (df *DataFrame) SplitColumn(identifier any, delimiter string, newColumnNames []string) error {
 	var err error
 	var column *Series
-	column, err = df.GetColumnByName(columnName)
+	column, err = df.GetColumnDynamic(identifier)
 	if err != nil {
-		return fmt.Errorf("failed to split column %q: %w", columnName, err)
+		return fmt.Errorf("failed to split column %v: %w", identifier, err)
 	}
 
 	if column.DataType == "float" {
-		return fmt.Errorf("column %q cannot be split, select string column to split", columnName)
+		return fmt.Errorf("column %v cannot be split, select string column to split", identifier)
 	}
 	if len(newColumnNames) == 0 {
 		return nil
@@ -385,18 +369,18 @@ func (df *DataFrame) SplitColumn(columnName, delimiter string, newColumnNames []
 	return nil
 }
 
-func (df *DataFrame) JoinColumns(columnName1, columnName2, delimiter, newColumnName string) error {
+func (df *DataFrame) JoinColumns(identifier1, identifier2 any, delimiter, newColumnName string) error {
 	var column1 *Series
 	var column2 *Series
 	var err error
 	// Retrieve the columns to be joined
-	column1, err = df.GetColumnByName(columnName1)
+	column1, err = df.GetColumnDynamic(identifier1)
 	if err != nil {
-		return fmt.Errorf("failed to join columns %q: %w", columnName1, err)
+		return fmt.Errorf("failed to join columns %v: %w", identifier1, err)
 	}
-	column2, err = df.GetColumnByName(columnName2)
+	column2, err = df.GetColumnDynamic(identifier2)
 	if err != nil {
-		return fmt.Errorf("failed to join columns %q: %w", columnName2, err)
+		return fmt.Errorf("failed to join columns %v: %w", identifier2, err)
 	}
 
 	// Validate that both columns are string columns
@@ -444,48 +428,26 @@ func (df *DataFrame) JoinColumns(columnName1, columnName2, delimiter, newColumnN
 	return nil
 }
 
-func (df *DataFrame) SliceRows(offset int, length int) error {
-	// Ensure offset is within bounds
-	if offset < 0 || offset >= df.GetLength() {
-		return fmt.Errorf("offset out of range")
+func (df *DataFrame) SliceRows(low int, high int) error {
+	if low < 0 || high >= df.GetNumberOfColumns() {
+		return fmt.Errorf("out of range")
 	}
-
-	// Ensure length is within bounds
-	if offset+length > len(df.Columns[0].Float) {
-		length = len(df.Columns[0].Float) - offset // Adjust length to max available range
-	}
-
-	// Create a new DataFrame to hold the sliced data
-	newDf := &DataFrame{
-		Columns: make([]Series, len(df.Columns)),
-	}
-
-	// Iterate over each Series to slice the data
-	for i, series := range df.Columns {
-		newSeries := Series{
-			Name:     series.Name,
-			DataType: series.DataType,
+	for i := range df.Columns {
+		if df.Columns[i].DataType == "float" {
+			df.Columns[i].Float = df.Columns[i].Float[low:high]
+		} else {
+			df.Columns[i].String = df.Columns[i].String[low:high]
 		}
-
-		// Slice based on the DataType
-		if series.DataType == "float" {
-			newSeries.Float = series.Float[offset : offset+length]
-		} else if series.DataType == "string" {
-			newSeries.String = series.String[offset : offset+length]
-		}
-
-		newDf.Columns[i] = newSeries
 	}
-
 	return nil
 }
 
-func (df *DataFrame) SliceColumnsByIndex(indexes ...int) {
-	for i := range df.Columns {
-		if ArrayContainsInteger(indexes, i) {
-			df.Columns = append(df.Columns[:i], df.Columns[i+1:]...)
-		}
+func (df *DataFrame) SliceColumnsByIndex(low, high int) error {
+	if low < 0 || high >= df.GetNumberOfColumns() {
+		return fmt.Errorf("out of range")
 	}
+	df.Columns = df.Columns[low:high]
+	return nil
 }
 
 func (df *DataFrame) MergeDataFrame(otherDf DataFrame) error {
@@ -547,42 +509,42 @@ func (df *DataFrame) Concatenate(otherDf DataFrame) error {
 	return nil
 }
 
-func (df *DataFrame) DuplicateColumn(names ...string) error {
+func (df *DataFrame) DuplicateColumn(identifiers ...any) error {
 	var ptr *Series
 	var series Series
 	var err error
 
-	for _, name := range names {
-		ptr, err = df.GetColumnByName(name)
+	for _, identifier := range identifiers {
+		ptr, err = df.GetColumnDynamic(identifier)
 		if err != nil {
-			return fmt.Errorf("failed to duplicate column %q: %w", name, err)
+			return fmt.Errorf("failed to duplicate column %v: %w", identifier, err)
 		}
 		series = *ptr
 		series.Name = series.Name + strconv.Itoa(1)
 		err = df.AddSeries(series)
 		if err != nil {
-			return fmt.Errorf("failed to duplicate column %q: %w", name, err)
+			return fmt.Errorf("failed to duplicate column %v: %w", identifier, err)
 		}
 	}
 	return nil
 }
 
-func (df *DataFrame) MathBase(columnName1, columnName2, newColumnName string, operation func(float64, float64) float64) error {
+func (df *DataFrame) MathBase(identifier1, identifier2 any, newColumnName string, operation func(float64, float64) float64) error {
 	var newColumn Series
 	var series1 *Series
 	var series2 *Series
 	var err error
 
-	series1, err = df.GetColumnByName(columnName1)
+	series1, err = df.GetColumnDynamic(identifier1)
 	if err != nil {
-		return fmt.Errorf("failed to execute math operation %q: %w", columnName1, err)
+		return fmt.Errorf("failed to execute math operation %v: %w", identifier1, err)
 	}
-	series2, err = df.GetColumnByName(columnName2)
+	series2, err = df.GetColumnDynamic(identifier2)
 	if err != nil {
-		return fmt.Errorf("failed to execute math operation %q: %w", columnName2, err)
+		return fmt.Errorf("failed to execute math operation %v: %w", identifier2, err)
 	}
 	if !(series1.DataType == "float") || !(series2.DataType == "float") {
-		return fmt.Errorf("math operation %q only supports floating point values", columnName1)
+		return fmt.Errorf("math operation only supports floating point values")
 	}
 	size := series1.GetLength()
 	if size == 0 {
@@ -623,7 +585,7 @@ func (df *DataFrame) MathBase(columnName1, columnName2, newColumnName string, op
 
 	err = df.AddSeries(newColumn)
 	if err != nil {
-		return fmt.Errorf("failed to execute math operation %q: %w", columnName1, err)
+		return fmt.Errorf("failed to execute math operation %q: %w", newColumnName, err)
 	}
 	return nil
 }
@@ -644,36 +606,80 @@ func (df *DataFrame) Division(columnName1, columnName2, newColumnName string) er
 	return df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x / y })
 }
 
-func (df *DataFrame) SetFloatValue(columnIndex, rowIndex int, newValue float64) error {
-	series := df.GetColumnByIndex(columnIndex)
+func (df *DataFrame) SetFloatValue(identifier any, rowIndex int, newValue float64) error {
+	series, err := df.GetColumnDynamic(identifier)
+	if err != nil {
+		return fmt.Errorf("failed to set value for column %v: %w", identifier, err)
+	}
 	if series.DataType != "float" {
-		return fmt.Errorf("column %q only supports floating point values", columnIndex)
+		return fmt.Errorf("column %v only supports floating point values", identifier)
 	}
 	series.Float[rowIndex] = newValue
 	return nil
 }
 
-func (df *DataFrame) SetStringValue(columnIndex, rowIndex int, newValue string) error {
-	series := df.GetColumnByIndex(columnIndex)
+func (df *DataFrame) SetStringValue(identifier any, rowIndex int, newValue string) error {
+	series, err := df.GetColumnDynamic(identifier)
+	if err != nil {
+		return fmt.Errorf("failed to set value for column %v: %w", identifier, err)
+	}
 	if series.DataType != "string" {
-		return fmt.Errorf("column %q only supports string values", columnIndex)
+		return fmt.Errorf("column %v only supports string values", identifier)
 	}
 	series.String[rowIndex] = newValue
 	return nil
 }
 
-func (df *DataFrame) GetFloatValue(columnIndex, rowIndex int) (float64, error) {
-	series := df.GetColumnByIndex(columnIndex)
+func (df *DataFrame) SetValue(identifier any, rowIndex int, newValue any) error {
+	series, err := df.GetColumnDynamic(identifier)
+	if err != nil {
+		return fmt.Errorf("failed to set value for column %v: %w", identifier, err)
+	}
+	if series.DataType == "string" {
+		newS, err := InterfaceConvertToString(newValue)
+		if err != nil {
+			return fmt.Errorf("failed to set value for column %v: %w", identifier, err)
+		}
+		series.String[rowIndex] = newS
+		return nil
+	}
+	newF, err := InterfaceConvertToFloat(newValue)
+	if err != nil {
+		return fmt.Errorf("failed to set value for column %v: %w", identifier, err)
+	}
+	series.Float[rowIndex] = newF
+	return nil
+}
+
+func (df *DataFrame) GetFloatValue(identifier any, rowIndex int) (float64, error) {
+	series, err := df.GetColumnDynamic(identifier)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get value for column %v: %w", identifier, err)
+	}
 	if series.DataType != "float" {
-		return 0, fmt.Errorf("column %q only supports floating point tasks", columnIndex)
+		return 0, fmt.Errorf("column %q only supports floating point tasks", identifier)
 	}
 	return series.Float[rowIndex], nil
 }
 
-func (df *DataFrame) GetStringValue(columnIndex, rowIndex int) (string, error) {
-	series := df.GetColumnByIndex(columnIndex)
+func (df *DataFrame) GetStringValue(identifier, rowIndex int) (string, error) {
+	series, err := df.GetColumnDynamic(identifier)
+	if err != nil {
+		return "", fmt.Errorf("failed to get value for column %v: %w", identifier, err)
+	}
 	if series.DataType != "string" {
-		return "", fmt.Errorf("column %q only supports string tasks", columnIndex)
+		return "", fmt.Errorf("column %q only supports string tasks", identifier)
+	}
+	return series.String[rowIndex], nil
+}
+
+func (df *DataFrame) GetValue(identifier any, rowIndex int) (any, error) {
+	series, err := df.GetColumnDynamic(identifier)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get value for column %v: %w", identifier, err)
+	}
+	if series.DataType == "float" {
+		return series.Float[rowIndex], nil
 	}
 	return series.String[rowIndex], nil
 }
@@ -716,20 +722,7 @@ func (df *DataFrame) SwapRows(index1, index2 int) error {
 }
 
 // Sort QuickSort sorts the array in place using the QuickSort algorithm
-func (df *DataFrame) Sort(columnName string, internal ...int) error {
-	var index int
-	var err error
-
-	index, err = df.GetColumnIndexByName(columnName)
-	if err != nil {
-		return fmt.Errorf("error sorting %q: %w", columnName, err)
-	}
-	err = df.SortIndex(index, internal...)
-	return nil
-}
-
-// SortIndex QuickSort sorts the array in place using the QuickSort algorithm
-func (df *DataFrame) SortIndex(index int, internal ...int) error {
+func (df *DataFrame) Sort(identifier any, internal ...int) error {
 	var low int
 	var high int
 	var p int
@@ -741,26 +734,30 @@ func (df *DataFrame) SortIndex(index int, internal ...int) error {
 		low = internal[0]
 		high = internal[1]
 	}
+	series, err := df.GetColumnDynamic(identifier)
+	if err != nil {
+		return fmt.Errorf("error sorting %v: %w", identifier, err)
+	}
 	if low < high {
 		// Partition the array
-		if df.Columns[index].DataType == "float" {
-			p, err = df.PartitionFloat(index, low, high)
+		if series.DataType == "float" {
+			p, err = df.PartitionFloat(series, low, high)
 			if err != nil {
-				return fmt.Errorf("error sorting dataframe by %q column", df.Columns[index].Name)
+				return fmt.Errorf("error sorting dataframe by %q column", series.Name)
 			}
 		} else {
-			p, err = df.PartitionString(index, low, high)
+			p, err = df.PartitionString(series, low, high)
 			if err != nil {
-				return fmt.Errorf("error sorting dataframe by %q column", df.Columns[index].Name)
+				return fmt.Errorf("error sorting dataframe by %q column", series.Name)
 			}
 		}
 
 		// Recursively sort the sub-arrays
-		err = df.SortIndex(index, low, p-1)
+		err = df.Sort(identifier, low, p-1)
 		if err != nil {
 			return fmt.Errorf("error sorting dataframe")
 		}
-		err = df.SortIndex(index, p+1, high)
+		err = df.Sort(identifier, p+1, high)
 		if err != nil {
 			return fmt.Errorf("error sorting dataframe")
 		}
@@ -769,13 +766,13 @@ func (df *DataFrame) SortIndex(index int, internal ...int) error {
 }
 
 // PartitionString rearranges the array and returns the pivot index for strings
-func (df *DataFrame) PartitionString(index, low, high int) (int, error) {
+func (df *DataFrame) PartitionString(column *Series, low, high int) (int, error) {
 	var err error
-	pivot := df.Columns[index].String[high] // Choose the last element as pivot
-	i := low - 1                            // Pointer for the smaller element
+	pivot := column.String[high] // Choose the last element as pivot
+	i := low - 1                 // Pointer for the smaller element
 
 	for j := low; j < high; j++ {
-		if df.Columns[index].String[j] < pivot {
+		if column.String[j] < pivot {
 			i++
 			err = df.SwapRows(i, j) // Swap if element is smaller than pivot
 			if err != nil {
@@ -793,14 +790,14 @@ func (df *DataFrame) PartitionString(index, low, high int) (int, error) {
 }
 
 // PartitionFloat partition rearranges the array and returns the pivot index
-func (df *DataFrame) PartitionFloat(index, low, high int) (int, error) {
+func (df *DataFrame) PartitionFloat(column *Series, low, high int) (int, error) {
 	var err error
 
-	pivot := df.Columns[index].Float[high] // Choose the last element as pivot
-	i := low - 1                           // Pointer for the smaller element
+	pivot := column.Float[high] // Choose the last element as pivot
+	i := low - 1                // Pointer for the smaller element
 
 	for j := low; j < high; j++ {
-		if df.Columns[index].Float[j] < pivot {
+		if column.Float[j] < pivot {
 			i++
 			err = df.SwapRows(i, j) // Swap if element is smaller than pivot
 			if err != nil {
