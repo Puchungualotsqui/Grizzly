@@ -251,7 +251,7 @@ index, _ = df.GetColumnIndexByName("name")
 ## DataFrame Manipulation
 ### FilterFloat
 Filter rows based on a condition for float columns.
-- columnName *string*: name of the column for the filter.
+- identifier *any*: integer or name of the column to filter.
 - condition *func(value float64) bool*: function to filter. True values will be deleted.
 ```
 filter := func(val float64) bool {
@@ -260,11 +260,11 @@ filter := func(val float64) bool {
 	}
 	return false
 }
-df.FilterFloat("num_bath", filter)
+df.FilterFloat(0, filter)
 ```
 ### FilterString
 Filter rows based on a condition for string columns.
-- columnName *string*: name of the column for the filter.
+- identifier *any*: integer or name of the column to filter.
 - condition *func(value string) bool*: function to filter. True values will be deleted.
 ```
 filter := func(val string) bool {
@@ -273,11 +273,11 @@ filter := func(val string) bool {
 	}
 	return false
 }
-df.FilterFloat("names", filter)
+df.FilterFloat(0, filter)
 ```
 ### ApplyFloat
 Apply a function to transform a float column.
-- columnName *string*: name of the column to transform.
+- identifier *any*: integer or name of the column to apply operation.
 - operation *func(float64) float64*: operation to apply over the column.
 ```
 isWeekend := func(val float64) float64 {
@@ -287,7 +287,7 @@ df.ApplyString("is_weekend", isWeekend)
 ```
 ### ApplyString
 Apply a function to transform a string column.
-- columnName *string*: name of the column to transform.
+- identifier *any*: integer or name of the column to apply operation.
 - operation *func(string) string*: operation to apply over the column.
 ```
 isWeekend := func(val string) string {
@@ -302,7 +302,7 @@ df.ApplyString("is_weekend", isWeekend)
 ```
 ### ReplaceWholeWord
 Replace the whole value of each value.
-- columnName *string*: name of the column to replace the data.
+- identifier *any*: integer or name of the column to apply change.
 - old *string*: word to search to replace.
 - new *string*: replacement of the old string.
 ```
@@ -311,15 +311,15 @@ df.ReplaceWholeWord("name", "Dabid", "David")
 ### Replace
 Replace any substring equal to old value.
 Replace the whole value of each value.
-- columnName *string*: name of the column to replace the data.
-- old *string*: substring to search to replace.
-- new *string*: replacement of the old string.
+- identifier *any*: integer or name of the column to apply change.
+- old *any*: substring or number to search to replace.
+- new *any*: replacement of the old value.
 ```
 df.Replace("name", "Dabid", "David")
 ```
 ### DropByIndex
 Drop column indicating the index.
-- index *..int*: index to drop.
+- index *...int*: index to drop.
 ```
 df.DropByIndex(1,2,3,4)
 ```
@@ -331,31 +331,19 @@ df.DropByName("names", "ages")
 ```
 ### ConvertStringToFloat
 Try to convert a string column into float column.
-- names *...string*: names of columns to convert columns.
+- identifiers *...any*: name or index of the column to convert to float.
 ```
 df.ConvertStringToFloat("ages", "salary")
 ```
 ### ConvertFloatToString
 Try to convert a float column into string column.
-- names *...string*: names of columns to convert columns.
+- identifiers *...any*: name or index of the column to convert to string.
 ```
 df.ConvertFloatToString("postal_code")
 ```
-### ConvertStringToFloatIndex
-Try to convert a string column into float column indicating the index of the columns.
-- index *...int*: index of columns to convert columns.
-```
-df.ConvertStringToFloatIndex(2,5)
-```
-### ConvertFloatToStringIndex
-Try to convert a float column into string column indicating the index of the columns.
-- index *...int*: index of columns to convert columns.
-```
-df.ConvertFloatToStringIndex(2,5)
-```
 ### SplitColumn
 Split string column in different columns based on a delimiter.
-- columnName *string*: name of the column to split the data.
+- identifier *any*: name or index of the column to split the data.
 - delimiter *string*: delimiter to split the data.
 - newColumnNames *[]string*: names for the new columns.
 ```
@@ -363,8 +351,8 @@ df.SplitColumn("date_sold", "/", []string{"day", "month", "year"})
 ```
 ### JoinColumns
 Combine two string columns in a DataFrame by joining their values with a specified delimiter and creates a new column with the resulting values.
-- columnName1 *string*: name of the left column to join data.
-- columnName2 *string*: name of the right column to join data.
+- identifier1 *any*: name or index of the left column to join data.
+- identifier2 *any*: name or index the right column to join data.
 - delimiter *string*: value between values.
 - newColumnName *string*: name of the new column.
 ```
@@ -377,10 +365,10 @@ Slice the rows of the dataframe.
 ```
 df.SliceRows(5,2)
 ```
-### SliceColumnsByIndex
+### SliceColumns
 Slice the columns based on index number.
-- offset *int*: initial index to slice.
-- length *int*: length of slice.
+- low *int*: initial index to slice.
+- high *int*: final index to slice.
 ```
 df.SliceColumnsByIndex(5,2)
 ```
@@ -400,45 +388,45 @@ df.Concatenate(otherDF, "None")
 ```
 ### DuplicateColumn
 Create a copy of a column.
-- names *...string*: names of the columns to duplicate.
+- identifier *...nay*: names or indexes of the columns to duplicate.
 ```
 df.DuplicateColumn("names","street")
 ```
 ### Sum
 Sum two columns, the result is saved in a new column.
-- columnName1 *string*: first column to sum.
-- columnName2 *string*: second column to sum.
+- identifier1 *any*: first column to sum.
+- identifier2 *any*: second column to sum.
 - newColumnName *string*: name for the new column with the result.
 ```
 df.Sum("x","y","x+y")
 ```
 ### Subtraction
 Subtract two columns, the result is saved in a new column.
-- columnName1 *string*: column to be minuend.
-- columnName2 *string*: column to be subtrahen.
+- identifier1 *any*: column to be minuend.
+- identifier2 *any*: column to be subtrahen.
 - newColumnName *string*: name for the new column with the result.
 ```
 df.Subtraction("x","y","x-y")
 ```
 ### Multiplication
 Multiply two columns, the result is saved in a new column.
-- columnName1 *string*: first column to multiply.
-- columnName2 *string*: second column to multiply.
+- identifier1 *any*: first column to multiply.
+- identifier2 *any*: second column to multiply.
 - newColumnName *string*: name for the new column with the result.
 ```
 df.Subtraction("x","y","x*y")
 ```
 ### Division
 Divide two columns, the result is saved in a new column.
-- columnName1 *string*: column to be dividend.
-- columnName2 *string*: column to be divisor.
+- identifier1 *any*: column to be dividend.
+- identifier2 *any*: column to be divisor.
 - newColumnName *string*: name for the new column with the result.
 ```
 df.Subtraction("x","y","x/y")
 ```
 ### SetFloatValue
 Change the value of a row of a float column.
-- columnIndex *int*: index of the column to change value.
+- identifier *any*: index or name of the column to change value.
 - rowIndex *int*: index of the row to change the value.
 - newValue *float64*: new value.
 ```
@@ -446,15 +434,23 @@ df.SetFloatValue(2,100,94.213)
 ```
 ### SetStringValue
 Change the value of a row of a string column.
-- columnIndex *int*: index of the column to change value.
+- identifier *any*: index or name of the column to change value.
 - rowIndex *int*: index of the row to change the value.
 - newValue *string*: new value.
 ```
 df.SetStringValue(2,100,"sebastian")
 ```
+## SetValue
+Change the value of a row of an column. It will try to convert it to the type of the column.
+- identifier *any*: index or name of the column to change value.
+- rowIndex *int*: index of the row to change the value.
+- newValue *any*: new value.
+```
+df.SetValue(2,100,143)
+```
 ### GetFloatValue
 Return the float64 value of a row of a float column.
-- columnIndex *int*: index of the column to return value.
+- identifier *any*: index or name of the column to return value.
 - rowIndex *int*: index of the row to return the value.
 ```
 var returnValue float
@@ -462,11 +458,19 @@ returnValue = df.GetFloatValue(2,1245)
 ```
 ### GetStringValue
 Return the string value of a row of a float column.
-- columnIndex *int*: index of the column to return value.
+- identifier *any*: index or name of the column to return value.
 - rowIndex *int*: index of the row to return the value.
 ```
 var returnValue string
 returnValue = df.GetStringValue(2,1245)
+```
+### GetValue
+Return the value of a row of a column.
+- identifier *any*: index or name of the column to return value.
+- rowIndex *int*: index of the row to return the value.
+```
+var returnValue any
+returnValue = df.GetValue(3,123123)
 ```
 ### Expand
 Add new rows to the DataFrame.
@@ -485,15 +489,9 @@ df.SwapRows(1,0)
 ```
 ### Sort
 Sort the Dataframe based on one column.
-- columnName *string*: index of the column to sort the dataframe.
+- identifier *any*: index or name of the column to sort the dataframe.
 ```
 df.Sort("name")
-```
-### SortIndex
-Sort the Dataframe based on one column.
-- index *int*: index of the column to sort the dataframe.
-```
-df.SortIndex(0)
 ```
 ## Input
 ### ImportCSV
