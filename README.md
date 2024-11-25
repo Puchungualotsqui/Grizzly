@@ -17,6 +17,7 @@ To install the package, use:
 ```
 go get github.com/Puchungualotsqui/grizzly
 ```
+If you have problems. Please, try to download directly the package.
 ## Basic Usage
 ### Creating a DataFrame
 
