@@ -106,3 +106,16 @@ func ArrayMedian(nums []float64) float64 {
 		return (nums[n/2-1] + nums[n/2]) / 2.0
 	}
 }
+
+func ArrayCalculatePercentile(nums []float64, percentile float64) float64 {
+	size := len(nums)
+	index := (percentile / 100.0) * float64(size)
+	lower := int(index)
+	upper := lower + 1
+	weight := index - float64(lower)
+
+	if upper >= size {
+		return nums[lower]
+	}
+	return nums[lower]*(1-weight) + nums[upper]*weight
+}
