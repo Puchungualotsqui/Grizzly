@@ -442,7 +442,7 @@ func (df *DataFrame) SliceRows(low int, high int) error {
 	return nil
 }
 
-func (df *DataFrame) SliceColumnsByIndex(low, high int) error {
+func (df *DataFrame) SliceColumns(low, high int) error {
 	if low < 0 || high >= df.GetNumberOfColumns() {
 		return fmt.Errorf("out of range")
 	}
@@ -590,20 +590,20 @@ func (df *DataFrame) MathBase(identifier1, identifier2 any, newColumnName string
 	return nil
 }
 
-func (df *DataFrame) Sum(columnName1, columnName2, newColumnName string) error {
-	return df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x + y })
+func (df *DataFrame) Sum(identifier1, identifier2 any, newColumnName string) error {
+	return df.MathBase(identifier1, identifier2, newColumnName, func(x, y float64) float64 { return x + y })
 }
 
-func (df *DataFrame) Subtraction(columnName1, columnName2, newColumnName string) error {
-	return df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x - y })
+func (df *DataFrame) Subtraction(identifier1, identifier2 any, newColumnName string) error {
+	return df.MathBase(identifier1, identifier2, newColumnName, func(x, y float64) float64 { return x - y })
 }
 
-func (df *DataFrame) Multiplication(columnName1, columnName2, newColumnName string) error {
-	return df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x * y })
+func (df *DataFrame) Multiplication(identifier1, identifier2 any, newColumnName string) error {
+	return df.MathBase(identifier1, identifier2, newColumnName, func(x, y float64) float64 { return x * y })
 }
 
-func (df *DataFrame) Division(columnName1, columnName2, newColumnName string) error {
-	return df.MathBase(columnName1, columnName2, newColumnName, func(x, y float64) float64 { return x / y })
+func (df *DataFrame) Division(identifier1, identifier2 any, newColumnName string) error {
+	return df.MathBase(identifier1, identifier2, newColumnName, func(x, y float64) float64 { return x / y })
 }
 
 func (df *DataFrame) SetFloatValue(identifier any, rowIndex int, newValue float64) error {
