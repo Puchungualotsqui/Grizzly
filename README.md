@@ -525,6 +525,57 @@ Remove rows with exact same values.
 ```
 df.RemoveDuplicates()
 ```
+### Normalize
+Scale features to a range of [0, 1].
+- identifiers *any*: name or index of the columns to normalize.
+```
+df.Normalize("Age")
+```
+### Standardize
+Transform features to have zero mean and unit variance.
+- identifiers *any*: name or index of the columns to standarize.
+```
+df.Standardize(0,2)
+```
+### OneHotEncode
+Create binary columns for each category.
+- identifiers *any*: name or index of the columns to apply function.
+```
+df.OneHotEncode("names")
+```
+### LabelEncode
+Assign unique number labels to each category.
+- identifiers *any*: name or index of the columns to apply function.
+```
+df.LabelEncode("names")
+```
+### SelectByCorrelation
+Select features with high correlation to the target variable.
+- targetIdentifier *any*: name or index of the column of the target variable.
+- threshold *float64*: min correlation coefficient to keep column.
+```
+df.SelectByCorrelation("salary", 0.5)
+```
+### VarianceThreshold
+Remove low-variance features.
+- threshold *float64*: min variance to keep column.
+```
+df.VarianceThreshold(1.25)
+```
+### TrainTestSplit
+Split data into training and testing subsets.
+- df *DataFrame*: DataFrame to be split.
+- testSize *float64*: relative size of the test data set. Max is 1.
+- randomState *int*: seed for shuffle DataFrame.
+```
+var trainSet DataFrame
+var testSet DataFrame
+var err error
+
+df, _ = grizzly.ImportCSV("example.csv")
+
+trainSet, testSet, err = TrainTestSplit(df, 0.75, 0) // No shuffle
+```
 ## Input
 ### ImportCSV
 Import CSV file as Grizzly DataFrame.
