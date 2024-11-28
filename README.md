@@ -440,7 +440,7 @@ Change the value of a row of a string column.
 ```
 df.SetStringValue(2,100,"sebastian")
 ```
-## SetValue
+### SetValue
 Change the value of a row of an column. It will try to convert it to the type of the column.
 - identifier *any*: index or name of the column to change value.
 - rowIndex *int*: index of the row to change the value.
@@ -492,6 +492,38 @@ Sort the Dataframe based on one column.
 - identifier *any*: index or name of the column to sort the dataframe.
 ```
 df.Sort("name")
+```
+## Data Cleaning
+### FillNaN
+Replace all NaN values in float columns.
+- newValue *float64*: value to replace all NaN values.
+- identifiers *...any*: name or indexes of columns to replace NaN values. If it is empty will replace NaN values in all columns.
+```
+df.FillNaN(5, "ages","salary")
+```
+### DropNaN
+Drop all rows with NaN values in float columns.
+- identifiers *...any*: name or indexes of columns to check if there is any NaN value. If it is empty will check all columns.
+```
+df.DropNaN()
+```
+### RemoveOutliersZScore
+Remove rows with outliers values on a column. Using ZScore method.
+- identifier *any*: name or index of the column to check outliers.
+- threshold *float64*: break point to filter outliers.
+```
+df.RemoveOutliersZScore("salary", 0.25)
+```
+### RemoveOutliersIQR
+Remove outliers using interquartile range.
+- identifier *any*: name or index of the column to check outliers.
+```
+df.RemoveOutliersIQR("salary")
+```
+### RemoveDuplicates
+Remove rows with exact same values.
+```
+df.RemoveDuplicates()
 ```
 ## Input
 ### ImportCSV
