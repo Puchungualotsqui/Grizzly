@@ -538,11 +538,13 @@ func (df *DataFrame) SelectByCorrelation(targetIdentifier any, threshold float64
 		}
 	}
 
-	for i, column := range df.Columns {
-		if !ArrayContainsString(selectedColumns, column.Name) && column.DataType == "string" {
-			df.Columns = append(df.Columns[:i], df.Columns[i+1:]...)
+	var filteredColumns []Series
+	for _, column := range df.Columns {
+		if ArrayContainsString(selectedColumns, column.Name) || column.DataType != "string" {
+			filteredColumns = append(filteredColumns, column)
 		}
 	}
+	df.Columns = filteredColumns
 	return nil
 }
 
@@ -564,11 +566,13 @@ func (df *DataFrame) VarianceThreshold(threshold float64) error {
 		}
 	}
 
-	for i, column := range df.Columns {
-		if !ArrayContainsString(selectedColumns, column.Name) && column.DataType == "string" {
-			df.Columns = append(df.Columns[:i], df.Columns[i+1:]...)
+	var filteredColumns []Series
+	for _, column := range df.Columns {
+		if ArrayContainsString(selectedColumns, column.Name) || column.DataType != "string" {
+			filteredColumns = append(filteredColumns, column)
 		}
 	}
+	df.Columns = filteredColumns
 	return nil
 }
 
