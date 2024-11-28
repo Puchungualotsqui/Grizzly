@@ -369,44 +369,48 @@ func (df *DataFrame) OneHotEncode(identifiers ...any) error {
 }
 
 func (df *DataFrame) LabelEncode(identifiers ...any) error {
-	var series *Series
-	var err error
-	var uniqueS []string
-	var uniqueF []float64
-	var equivalentS map[string]float64
-	var equivalentF map[float64]float64
-	var index float64
-
+	var internalIndex int
 	numGoroutines := runtime.NumCPU()
-	length := series.GetLength()
+	length := df.GetLength()
+	if length == 0 {
+		return fmt.Errorf("dataframe is empty")
+	}
 	chunkSize := (length + numGoroutines - 1) / numGoroutines
 
 	for _, identifier := range identifiers {
-		series, err = df.GetColumnDynamic(identifier)
+		series, err := df.GetColumnDynamic(identifier)
 		if err != nil {
 			return fmt.Errorf("error retrieving column '%v': %w", identifier, err)
 		}
+
+		var equivalentMap map[interface{}]float64
+		var nanLabel float64 = -1 // Special label for NaN values
+
 		if series.DataType == "string" {
-			uniqueS = ArrayUniqueValuesString(series.String)
-			uniqueS = ParallelSortString(uniqueS)
-			index = 0
-			for _, value := range uniqueS {
-				equivalentS[value] = index
-				index++
+			uniqueValues := ArrayUniqueValuesString(series.String)
+			uniqueValues = ParallelSortString(uniqueValues) // Sort in-place
+			equivalentMap = make(map[interface{}]float64, len(uniqueValues))
+			for index, value := range uniqueValues {
+				equivalentMap[value] = float64(index)
 			}
 		} else {
-			uniqueF = ArrayUniqueValuesFloat(series.Float)
-			uniqueF = ParallelSortFloat(uniqueF)
-			index = 0
-			for _, value := range uniqueF {
-				equivalentF[value] = index
-				index++
+			uniqueValues := ArrayUniqueValuesFloat(series.Float)
+			uniqueValues = ParallelSortFloat(uniqueValues) // Sort in-place
+			equivalentMap = make(map[interface{}]float64, len(uniqueValues))
+			internalIndex = 0
+			for _, value := range uniqueValues {
+				if math.IsNaN(value) {
+					continue // Handle NaN separately
+				}
+				equivalentMap[value] = float64(internalIndex)
+				internalIndex++
 			}
 		}
+
+		// Concurrently process chunks to apply label encoding
 		var wg sync.WaitGroup
 		wg.Add(numGoroutines)
 
-		// Process chunks in parallel
 		for g := 0; g < numGoroutines; g++ {
 			start := g * chunkSize
 			end := start + chunkSize
@@ -418,17 +422,27 @@ func (df *DataFrame) LabelEncode(identifiers ...any) error {
 				defer wg.Done()
 				for i := start; i < end; i++ {
 					if series.DataType == "string" {
-						series.Float[i] = equivalentS[series.String[i]]
+						series.Float[i] = equivalentMap[series.String[i]]
 					} else {
-						series.Float[i] = equivalentF[series.Float[i]]
+						value := series.Float[i]
+						if math.IsNaN(value) { // Handle NaN explicitly
+							series.Float[i] = nanLabel
+						} else {
+							series.Float[i] = equivalentMap[value]
+						}
 					}
-
 				}
 			}(start, end)
 		}
-		wg.Wait()
-		series.String = nil
 
+		wg.Wait()
+
+		// Clear the original string data and update metadata
+		if series.DataType == "string" {
+			series.String = nil
+		}
+		series.DataType = "float"
 	}
+
 	return nil
 }
