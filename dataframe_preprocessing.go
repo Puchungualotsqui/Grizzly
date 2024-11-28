@@ -2,6 +2,7 @@ package grizzly
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"runtime"
@@ -296,9 +297,9 @@ func (df *DataFrame) Standardize(identifiers ...any) error {
 }
 
 /*
-##############################
+################################
 #Encoding Categorical Variables#
-##############################
+################################
 */
 func (df *DataFrame) OneHotEncode(identifiers ...any) error {
 	var series *Series
@@ -444,5 +445,127 @@ func (df *DataFrame) LabelEncode(identifiers ...any) error {
 		series.DataType = "float"
 	}
 
+	return nil
+}
+
+/*
+###################
+#Feature Selection#
+###################
+*/
+
+func PearsonCorrelation(x, y []float64) (float64, error) {
+	xMean := ArrayMean(x)
+	yMean := ArrayMean(y)
+
+	numeratorChan := make(chan float64)
+	xDenominatorChan := make(chan float64)
+	yDenominatorChan := make(chan float64)
+
+	// Compute numerator and denominators concurrently
+	go func() {
+		sum := 0.0
+		for i := 0; i < len(x); i++ {
+			xDiff := x[i] - xMean
+			yDiff := y[i] - yMean
+			sum += xDiff * yDiff
+		}
+		numeratorChan <- sum
+	}()
+	go func() {
+		sum := 0.0
+		for i := 0; i < len(x); i++ {
+			xDiff := x[i] - xMean
+			sum += math.Pow(xDiff, 2)
+		}
+		xDenominatorChan <- sum
+	}()
+	go func() {
+		sum := 0.0
+		for i := 0; i < len(y); i++ {
+			yDiff := y[i] - yMean
+			sum += math.Pow(yDiff, 2)
+		}
+		yDenominatorChan <- sum
+	}()
+
+	// Collect results from channels
+	numerator := <-numeratorChan
+	xDenominator := <-xDenominatorChan
+	yDenominator := <-yDenominatorChan
+
+	// Compute denominator
+	denominator := math.Sqrt(xDenominator * yDenominator)
+	if denominator == 0 {
+		return 0, errors.New("division by zero in correlation calculation")
+	}
+
+	// Compute and return Pearson correlation
+	return numerator / denominator, nil
+
+}
+
+func (df *DataFrame) SelectByCorrelation(targetIdentifier any, threshold float64) error {
+	var targetSeries *Series
+	var err error
+	var selectedColumns []string
+	var correlation float64
+
+	targetSeries, err = df.GetColumnDynamic(targetIdentifier)
+	if err != nil {
+		return fmt.Errorf("error retrieving column '%v': %w", targetIdentifier, err)
+	}
+	if targetSeries.DataType != "float" {
+		return fmt.Errorf("column '%v' is not a float column", targetIdentifier)
+	}
+
+	for _, column := range df.Columns {
+		if column.Name == targetSeries.Name {
+			continue
+		}
+		if column.DataType != "float" {
+			continue
+		}
+		correlation, err = PearsonCorrelation(column.Float, targetSeries.Float)
+		if err != nil {
+			return fmt.Errorf("error calculating correlation for column '%v': %w", targetIdentifier, err)
+		}
+
+		if math.Abs(correlation) >= threshold {
+			selectedColumns = append(selectedColumns, column.Name)
+		}
+	}
+
+	for i, column := range df.Columns {
+		if !ArrayContainsString(selectedColumns, column.Name) && column.DataType == "string" {
+			df.Columns = append(df.Columns[:i], df.Columns[i+1:]...)
+		}
+	}
+	return nil
+}
+
+func (df *DataFrame) VarianceThreshold(threshold float64) error {
+	if df.GetLength() == 0 {
+		return fmt.Errorf("dataframe is empty")
+	}
+	var selectedColumns []string
+	var variance float64
+
+	for _, column := range df.Columns {
+		if column.DataType != "float" {
+			continue
+		}
+
+		variance = ArrayVariance(column.Float)
+		if variance >= threshold {
+			selectedColumns = append(selectedColumns, column.Name)
+		}
+	}
+
+	for i, column := range df.Columns {
+		if !ArrayContainsString(selectedColumns, column.Name) && column.DataType == "string" {
+			df.Columns = append(df.Columns[:i], df.Columns[i+1:]...)
+		}
+	}
 	return nil
 }

@@ -44,10 +44,10 @@ func ArraySum(data []float64) float64 {
 	return result
 }
 
-func ArrayVariance(data []float64, backed ...float64) float64 {
+func ArrayVariance(data []float64, meanP ...float64) float64 {
 	var mean float64
-	if len(backed) != 0 {
-		mean = backed[0]
+	if len(meanP) != 0 {
+		mean = meanP[0]
 	} else {
 		mean = ArrayMean(data)
 	}
