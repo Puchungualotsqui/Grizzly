@@ -467,6 +467,39 @@ func (df *DataFrame) SliceRows(low int, high int) error {
 	return nil
 }
 
+func (df *DataFrame) SelectRows(indices []int) (DataFrame, error) {
+	// Check if the indices are valid
+	for _, index := range indices {
+		if index < 0 || index >= df.GetLength() {
+			return DataFrame{}, fmt.Errorf("index out of range: %d", index)
+		}
+	}
+
+	// Create a new DataFrame to store the selected rows
+	selected := DataFrame{
+		Columns: make([]Series, len(df.Columns)),
+	}
+
+	// Iterate over each column to copy selected rows
+	for i, col := range df.Columns {
+		selected.Columns[i] = Series{
+			Name:     col.Name,
+			DataType: col.DataType,
+		}
+		if col.DataType == "float" {
+			for _, index := range indices {
+				selected.Columns[i].Float = append(selected.Columns[i].Float, col.Float[index])
+			}
+		} else { // For "string" or other types
+			for _, index := range indices {
+				selected.Columns[i].String = append(selected.Columns[i].String, col.String[index])
+			}
+		}
+	}
+
+	return selected, nil
+}
+
 func (df *DataFrame) SliceColumns(low, high int) error {
 	if low < 0 || high >= df.GetNumberOfColumns() {
 		return fmt.Errorf("out of range")

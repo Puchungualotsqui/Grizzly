@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"runtime"
 	"sort"
 	"sync"
+	"time"
 )
 
 /*#############
@@ -568,4 +570,50 @@ func (df *DataFrame) VarianceThreshold(threshold float64) error {
 		}
 	}
 	return nil
+}
+
+/*
+###########
+#Utilities#
+###########
+*/
+func TrainTestSplit(df DataFrame, testSize float64, randomState int) (DataFrame, DataFrame, error) {
+	// Validate inputs
+	if testSize < 0 || testSize > 1 {
+		return DataFrame{}, DataFrame{}, fmt.Errorf("testSize must be between 0 and 1")
+	}
+	var err error
+	numRows := df.GetLength()
+
+	// Calculate the split index
+	numTest := int(float64(numRows) * testSize)
+	numTrain := numRows - numTest
+
+	// Create a new random source
+	var rng *rand.Rand
+	if randomState != 0 {
+		rng = rand.New(rand.NewSource(int64(randomState)))
+	} else {
+		rng = rand.New(rand.NewSource(time.Now().UnixNano()))
+	}
+
+	// Generate a shuffled index
+	indices := rng.Perm(numRows)
+
+	// Create train and test indices
+	trainIndices := indices[:numTrain]
+	testIndices := indices[numTrain:]
+
+	// Create train and test DataFrames
+	trainSet, err := df.SelectRows(trainIndices)
+	if err != nil {
+		return DataFrame{}, DataFrame{}, err
+	}
+	testSet, err := df.SelectRows(testIndices)
+	if err != nil {
+		return DataFrame{}, DataFrame{}, err
+	}
+
+	return trainSet, testSet, nil
+
 }
