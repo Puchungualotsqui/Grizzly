@@ -272,6 +272,31 @@ func (df *DataFrame) DropByName(name ...string) {
 	return
 }
 
+func (df *DataFrame) DropDynamic(identifier any) error {
+	var possibleName string
+	var possibleIndex int
+	var byIndex bool
+	var err error
+
+	switch v := identifier.(type) {
+	case int:
+		byIndex = true
+		possibleIndex = v
+	default:
+		byIndex = false
+		possibleName, err = InterfaceConvertToString(identifier)
+		if err != nil {
+			return err
+		}
+	}
+	if byIndex {
+		df.DropByIndex(possibleIndex)
+		return nil
+	}
+	df.DropByName(possibleName)
+	return nil
+}
+
 func (df *DataFrame) ConvertStringToFloat(identifiers ...any) error {
 	var check *Series
 	var err error

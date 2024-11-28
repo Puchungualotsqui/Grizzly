@@ -492,3 +492,34 @@ func ArrayUniqueValuesString(arr []string) []string {
 
 	return uniqueValues
 }
+
+func OneHotEncode(data []string) ([]float64, map[float64]string) {
+	ArrayUniqueValuesString(data)
+	// Create a map to hold indices and categories
+	indexToCategory := make(map[float64]string)
+	categoryIndex := make(map[string]float64)
+
+	index := 0.0
+
+	// Build the categoryIndex and reverse indexToCategory maps
+	for _, category := range data {
+		if _, exists := categoryIndex[category]; !exists {
+			categoryIndex[category] = index
+			indexToCategory[index] = category
+			index++
+		}
+	}
+
+	// Determine the total size of the one-hot encoded data
+	numCategories := int(index)
+	encoded := make([]float64, len(data)*numCategories)
+
+	// Populate the flattened one-hot encoding
+	for i, category := range data {
+		rowStart := i * numCategories            // Row offset in the flattened array
+		colIndex := int(categoryIndex[category]) // Column index for the category
+		encoded[rowStart+colIndex] = 1.0         // Set the corresponding position to 1
+	}
+
+	return encoded, indexToCategory
+}

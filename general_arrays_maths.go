@@ -44,8 +44,13 @@ func ArraySum(data []float64) float64 {
 	return result
 }
 
-func ArrayVariance(data []float64) float64 {
-	mean := ArrayMean(data)
+func ArrayVariance(data []float64, backed ...float64) float64 {
+	var mean float64
+	if len(backed) != 0 {
+		mean = backed[0]
+	} else {
+		mean = ArrayMean(data)
+	}
 	chain := ArrayFloatBase(0, data, func(info float64, result float64) float64 {
 		diff := info - mean
 		return result + diff*diff // Accumulate the squared difference
