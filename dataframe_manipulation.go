@@ -250,33 +250,40 @@ func (df *DataFrame) Replace(identifier any, old, new any) error {
 	return nil
 }
 
-func (df *DataFrame) DropByIndex(index ...int) {
+func (df *DataFrame) DropByIndex(index ...int) DataFrame {
 	var newSeries []Series
+	var oldSeries []Series
 	for i, series := range df.Columns {
 		if !ArrayContainsInteger(index, i) {
 			newSeries = append(newSeries, series)
+		} else {
+			oldSeries = append(oldSeries, series)
 		}
 	}
 	df.Columns = newSeries
-	return
+	return DataFrame{oldSeries}
 }
 
-func (df *DataFrame) DropByName(name ...string) {
+func (df *DataFrame) DropByName(name ...string) DataFrame {
 	var newSeries []Series
+	var oldSeries []Series
 	for _, series := range df.Columns {
 		if !ArrayContainsString(name, series.Name) {
 			newSeries = append(newSeries, series)
+		} else {
+			oldSeries = append(oldSeries, series)
 		}
 	}
 	df.Columns = newSeries
-	return
+	return DataFrame{oldSeries}
 }
 
-func (df *DataFrame) DropDynamic(identifier any) error {
+func (df *DataFrame) DropDynamic(identifier any) (DataFrame, error) {
 	var possibleName string
 	var possibleIndex int
 	var byIndex bool
 	var err error
+	var oldDataFrame DataFrame
 
 	switch v := identifier.(type) {
 	case int:
@@ -286,15 +293,15 @@ func (df *DataFrame) DropDynamic(identifier any) error {
 		byIndex = false
 		possibleName, err = InterfaceConvertToString(identifier)
 		if err != nil {
-			return err
+			return DataFrame{}, err
 		}
 	}
 	if byIndex {
-		df.DropByIndex(possibleIndex)
-		return nil
+		oldDataFrame = df.DropByIndex(possibleIndex)
+		return oldDataFrame, nil
 	}
-	df.DropByName(possibleName)
-	return nil
+	oldDataFrame = df.DropByName(possibleName)
+	return oldDataFrame, nil
 }
 
 func (df *DataFrame) ConvertStringToFloat(identifiers ...any) error {
