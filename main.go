@@ -1,5 +1,0 @@
-package grizzly
-
-func main() {
-
-}
