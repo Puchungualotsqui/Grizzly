@@ -49,7 +49,7 @@ func (df *DataFrame) AddSeries(series Series) error {
 		return fmt.Errorf("cannot add a series with different length: series length %d, dataframe length %d",
 			series.GetLength(), df.GetLength())
 
-	} else if IsNameRepeated(df.Columns, series.Name) {
+	} else if isNameRepeated(df.Columns, series.Name) {
 		return fmt.Errorf("cannot add a series with repeated name: %s", series.Name)
 	}
 	df.Columns = append(df.Columns, series)
@@ -59,7 +59,7 @@ func (df *DataFrame) AddSeries(series Series) error {
 func (df *DataFrame) FixShape() {
 	var size int
 	for _, series := range df.Columns {
-		size = MaxInt(size, series.GetLength())
+		size = maxInt(size, series.GetLength())
 	}
 	for i := range df.Columns {
 		df.Columns[i].ResizeSeries(size, "NaN")
@@ -74,7 +74,7 @@ func (df *DataFrame) AddSeriesForced(series Series) {
 func (df *DataFrame) Print(min int, max int) error {
 	var err error
 	// Ensure max does not exceed the length of the DataFrame
-	max = MinInt(df.GetLength(), max)
+	max = minInt(df.GetLength(), max)
 
 	// Create a tab writer for better column alignment
 	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)

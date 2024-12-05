@@ -69,8 +69,8 @@ func (df *DataFrame) RemoveOutliersZScore(identifier any, threshold float64) err
 	var stdDev float64
 	zScore := make([]float64, df.GetLength())
 
-	mean = ArrayMean(series.Float)
-	stdDev = ArrayVariance(series.Float)
+	mean = arrayMean(series.Float)
+	stdDev = arrayVariance(series.Float)
 	stdDev = math.Sqrt(stdDev)
 
 	for i, value := range series.Float {
@@ -112,8 +112,8 @@ func (df *DataFrame) RemoveOutliersIQR(identifier any) error {
 		return err
 	}
 
-	q1 := ArrayCalculatePercentile(series.Float, 25)
-	q3 := ArrayCalculatePercentile(series.Float, 75)
+	q1 := arrayCalculatePercentile(series.Float, 25)
+	q3 := arrayCalculatePercentile(series.Float, 75)
 	iqr := q3 - q1
 
 	lowerBound := q1 - 1.5*iqr
@@ -245,8 +245,8 @@ func (df *DataFrame) Normalize(identifiers ...any) error {
 		}
 
 		// Find minimum and maximum values in the column
-		minV = ArrayMin(series.Float)
-		maxV = ArrayMax(series.Float)
+		minV = arrayMin(series.Float)
+		maxV = arrayMax(series.Float)
 
 		// Handle case where all values are equal
 		if minV == maxV {
@@ -282,8 +282,8 @@ func (df *DataFrame) Standardize(identifiers ...any) error {
 			return fmt.Errorf("column '%v' is an empty column", identifier)
 		}
 
-		mean = ArrayMean(series.Float)
-		stdDev = ArrayVariance(series.Float, mean)
+		mean = arrayMean(series.Float)
+		stdDev = arrayVariance(series.Float, mean)
 		stdDev = math.Sqrt(stdDev)
 
 		if stdDev == 0 {
@@ -330,7 +330,7 @@ func (df *DataFrame) OneHotEncode(identifiers ...any) error {
 		lastIndex = df.GetNumberOfColumns() - 1
 
 		// Get unique categories from the column
-		categories = ArrayUniqueValuesString(series.String)
+		categories = arrayUniqueValuesString(series.String)
 
 		// Create new float columns for each category with independent slices
 		for _, category := range categories {
@@ -390,14 +390,14 @@ func (df *DataFrame) LabelEncode(identifiers ...any) error {
 		var nanLabel float64 = -1 // Special label for NaN values
 
 		if series.DataType == "string" {
-			uniqueValues := ArrayUniqueValuesString(series.String)
-			uniqueValues = ParallelSortString(uniqueValues) // Sort in-place
+			uniqueValues := arrayUniqueValuesString(series.String)
+			uniqueValues = parallelSortString(uniqueValues) // Sort in-place
 			equivalentMap = make(map[interface{}]float64, len(uniqueValues))
 			for index, value := range uniqueValues {
 				equivalentMap[value] = float64(index)
 			}
 		} else {
-			uniqueValues := ArrayUniqueValuesFloat(series.Float)
+			uniqueValues := arrayUniqueValuesFloat(series.Float)
 			uniqueValues = ParallelSortFloat(uniqueValues) // Sort in-place
 			equivalentMap = make(map[interface{}]float64, len(uniqueValues))
 			internalIndex = 0
@@ -457,8 +457,8 @@ func (df *DataFrame) LabelEncode(identifiers ...any) error {
 */
 
 func PearsonCorrelation(x, y []float64) (float64, error) {
-	xMean := ArrayMean(x)
-	yMean := ArrayMean(y)
+	xMean := arrayMean(x)
+	yMean := arrayMean(y)
 
 	numeratorChan := make(chan float64)
 	xDenominatorChan := make(chan float64)
@@ -540,7 +540,7 @@ func (df *DataFrame) SelectByCorrelation(targetIdentifier any, threshold float64
 
 	var filteredColumns []Series
 	for _, column := range df.Columns {
-		if ArrayContainsString(selectedColumns, column.Name) || column.DataType != "string" {
+		if arrayContainsString(selectedColumns, column.Name) || column.DataType != "string" {
 			filteredColumns = append(filteredColumns, column)
 		}
 	}
@@ -560,7 +560,7 @@ func (df *DataFrame) VarianceThreshold(threshold float64) error {
 			continue
 		}
 
-		variance = ArrayVariance(column.Float)
+		variance = arrayVariance(column.Float)
 		if variance >= threshold {
 			selectedColumns = append(selectedColumns, column.Name)
 		}
@@ -568,7 +568,7 @@ func (df *DataFrame) VarianceThreshold(threshold float64) error {
 
 	var filteredColumns []Series
 	for _, column := range df.Columns {
-		if ArrayContainsString(selectedColumns, column.Name) || column.DataType != "string" {
+		if arrayContainsString(selectedColumns, column.Name) || column.DataType != "string" {
 			filteredColumns = append(filteredColumns, column)
 		}
 	}

@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-func ArrayFloatBase(initValue float64, data []float64, operation func(info float64, result float64) float64) chan float64 {
+func arrayFloatBase(initValue float64, data []float64, operation func(info float64, result float64) float64) chan float64 {
 	length := len(data)
 	if length == 0 {
 		// Handle empty data case by returning a closed channel immediately
@@ -56,7 +56,7 @@ func ArrayFloatBase(initValue float64, data []float64, operation func(info float
 	return resultChan
 }
 
-func ArrayStringBase(initValue float64, data []string, operation func(info string, result float64) float64) chan float64 {
+func arrayStringBase(initValue float64, data []string, operation func(info string, result float64) float64) chan float64 {
 	length := len(data)
 	if length == 0 {
 		// Handle empty data case by returning a closed channel immediately
@@ -103,7 +103,7 @@ func ArrayStringBase(initValue float64, data []string, operation func(info strin
 	return resultChan
 }
 
-func ArrayStringCountWord(data []string, word string) float64 {
+func arrayStringCountWord(data []string, word string) float64 {
 	CPUNumbers := runtime.NumCPU()
 
 	chunkSize := len(data) / CPUNumbers
@@ -149,7 +149,7 @@ func ArrayStringCountWord(data []string, word string) float64 {
 	return total
 }
 
-func ArrayFloatCountValue(data []float64, value float64) float64 {
+func arrayFloatCountValue(data []float64, value float64) float64 {
 	CPUNumbers := runtime.NumCPU()
 
 	chunkSize := len(data) / CPUNumbers
@@ -195,7 +195,7 @@ func ArrayFloatCountValue(data []float64, value float64) float64 {
 	return total
 }
 
-func ArrayFloatCountNaNValue(data []float64) float64 {
+func arrayFloatCountNaNValue(data []float64) float64 {
 	CPUNumbers := runtime.NumCPU()
 
 	chunkSize := len(data) / CPUNumbers
@@ -241,7 +241,7 @@ func ArrayFloatCountNaNValue(data []float64) float64 {
 	return total
 }
 
-func ArrayCountFloatDuplicates(elements []float64) map[float64]int {
+func arrayCountFloatDuplicates(elements []float64) map[float64]int {
 	numCPU := runtime.NumCPU()
 	length := len(elements)
 	if length == 0 {
@@ -280,7 +280,7 @@ func ArrayCountFloatDuplicates(elements []float64) map[float64]int {
 		close(resultChan)
 	}()
 
-	// MergeFloat results from all goroutines
+	// mergeFloat results from all goroutines
 	combinedCounts := make(map[float64]int)
 	for localCounts := range resultChan {
 		for key, count := range localCounts {
@@ -299,7 +299,7 @@ func ArrayCountFloatDuplicates(elements []float64) map[float64]int {
 	return finalResult
 }
 
-func ArrayContainsInteger(arr []int, target int) bool {
+func arrayContainsInteger(arr []int, target int) bool {
 	for _, value := range arr {
 		if value == target {
 			return true // Element found
@@ -308,7 +308,7 @@ func ArrayContainsInteger(arr []int, target int) bool {
 	return false // Element not found
 }
 
-func ArrayContainsString(arr []string, target string) bool {
+func arrayContainsString(arr []string, target string) bool {
 	for _, value := range arr {
 		if value == target {
 			return true // Element found
@@ -317,8 +317,8 @@ func ArrayContainsString(arr []string, target string) bool {
 	return false // Element not found
 }
 
-// ArrayGetNonFloatValues identifies non-convertible float values using goroutines
-func ArrayGetNonFloatValues(input []string) []string {
+// arrayGetNonFloatValues identifies non-convertible float values using goroutines
+func arrayGetNonFloatValues(input []string) []string {
 	numGoroutines := runtime.NumCPU() // Number of goroutines to use
 	chunkSize := (len(input) + numGoroutines - 1) / numGoroutines
 
@@ -359,21 +359,21 @@ func ArrayGetNonFloatValues(input []string) []string {
 	return nonConvertible
 }
 
-func ArrayResizeString(input []string, targetLength int, defaultValue string) []string {
+func arrayResizeString(input []string, targetLength int, defaultValue string) []string {
 	for len(input) < targetLength {
 		input = append(input, defaultValue)
 	}
 	return input
 }
 
-func ArrayResizeFloat(input []float64, targetLength int, defaultValue float64) []float64 {
+func arrayResizeFloat(input []float64, targetLength int, defaultValue float64) []float64 {
 	for len(input) < targetLength {
 		input = append(input, defaultValue)
 	}
 	return input
 }
 
-func ArrayUniqueValuesFloat(arr []float64) []float64 {
+func arrayUniqueValuesFloat(arr []float64) []float64 {
 	if len(arr) == 0 {
 		return []float64{}
 	}
@@ -416,7 +416,7 @@ func ArrayUniqueValuesFloat(arr []float64) []float64 {
 		close(results)
 	}()
 
-	// MergeFloat results from all chunks
+	// mergeFloat results from all chunks
 	finalUnique := make(map[float64]struct{})
 	for chunkResult := range results {
 		for key := range chunkResult {
@@ -433,7 +433,7 @@ func ArrayUniqueValuesFloat(arr []float64) []float64 {
 	return uniqueValues
 }
 
-func ArrayUniqueValuesString(arr []string) []string {
+func arrayUniqueValuesString(arr []string) []string {
 	if len(arr) == 0 {
 		return []string{}
 	}
@@ -476,7 +476,7 @@ func ArrayUniqueValuesString(arr []string) []string {
 		close(results)
 	}()
 
-	// MergeFloat results from all chunks
+	// mergeFloat results from all chunks
 	finalUnique := make(map[string]struct{})
 	for chunkResult := range results {
 		for key := range chunkResult {
@@ -493,8 +493,8 @@ func ArrayUniqueValuesString(arr []string) []string {
 	return uniqueValues
 }
 
-func OneHotEncode(data []string) ([]float64, map[float64]string) {
-	ArrayUniqueValuesString(data)
+func oneHotEncode(data []string) ([]float64, map[float64]string) {
+	arrayUniqueValuesString(data)
 	// Create a map to hold indices and categories
 	indexToCategory := make(map[float64]string)
 	categoryIndex := make(map[string]float64)

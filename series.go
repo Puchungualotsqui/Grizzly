@@ -33,15 +33,15 @@ func NewFloatSeries(name string, Float []float64) Series {
 
 func (series *Series) ResizeSeries(targetLength int, defaultValue string) {
 	if series.DataType == "string" {
-		series.String = ArrayResizeString(series.String, targetLength, defaultValue)
+		series.String = arrayResizeString(series.String, targetLength, defaultValue)
 		return
 	} else {
-		series.Float = ArrayResizeFloat(series.Float, targetLength, math.NaN())
+		series.Float = arrayResizeFloat(series.Float, targetLength, math.NaN())
 	}
 }
 
 func (series *Series) Print(max int) {
-	max = MinInt(max, series.GetLength())
+	max = minInt(max, series.GetLength())
 	if series.DataType == "float" {
 		for i := 0; i < max; i++ {
 			fmt.Println(i, series.Float[i])

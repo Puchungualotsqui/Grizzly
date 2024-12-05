@@ -33,7 +33,7 @@ func (df *DataFrame) GetShape() [2]int {
 
 func (df *DataFrame) ContainsColumn(name string) bool {
 	names := df.GetColumnNames()
-	return ArrayContainsString(names, name)
+	return arrayContainsString(names, name)
 }
 
 func (df *DataFrame) GetColumnByName(name string) (*Series, error) {
@@ -65,7 +65,7 @@ func (df *DataFrame) GetColumnDynamic(identifier any) (*Series, error) {
 		possibleIndex = v
 	default:
 		byIndex = false
-		possibleName, err = InterfaceConvertToString(identifier)
+		possibleName, err = interfaceConvertToString(identifier)
 	}
 	if byIndex {
 		result, err = df.GetColumnByIndex(possibleIndex)

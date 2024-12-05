@@ -239,8 +239,8 @@ func (df *DataFrame) Replace(identifier any, old, new any) error {
 	if err != nil {
 		return fmt.Errorf("failed to replace in column %v: %w", identifier, err)
 	}
-	oldString, err := InterfaceConvertToString(old)
-	newString, err := InterfaceConvertToString(new)
+	oldString, err := interfaceConvertToString(old)
+	newString, err := interfaceConvertToString(new)
 	if err != nil {
 		return fmt.Errorf("failed to replace in column %v: %w", identifier, err)
 	}
@@ -254,7 +254,7 @@ func (df *DataFrame) DropByIndex(index ...int) DataFrame {
 	var newSeries []Series
 	var oldSeries []Series
 	for i, series := range df.Columns {
-		if !ArrayContainsInteger(index, i) {
+		if !arrayContainsInteger(index, i) {
 			newSeries = append(newSeries, series)
 		} else {
 			oldSeries = append(oldSeries, series)
@@ -268,7 +268,7 @@ func (df *DataFrame) DropByName(name ...string) DataFrame {
 	var newSeries []Series
 	var oldSeries []Series
 	for _, series := range df.Columns {
-		if !ArrayContainsString(name, series.Name) {
+		if !arrayContainsString(name, series.Name) {
 			newSeries = append(newSeries, series)
 		} else {
 			oldSeries = append(oldSeries, series)
@@ -291,7 +291,7 @@ func (df *DataFrame) DropDynamic(identifier any) (DataFrame, error) {
 		possibleIndex = v
 	default:
 		byIndex = false
-		possibleName, err = InterfaceConvertToString(identifier)
+		possibleName, err = interfaceConvertToString(identifier)
 		if err != nil {
 			return DataFrame{}, err
 		}
@@ -519,7 +519,7 @@ func (df *DataFrame) MergeDataFrame(otherDf DataFrame) error {
 	names := df.GetColumnNames()
 	otherNames := otherDf.GetColumnNames()
 	for _, name := range names {
-		if ArrayContainsString(otherNames, name) {
+		if arrayContainsString(otherNames, name) {
 			return fmt.Errorf("column already exists")
 		}
 	}
@@ -536,7 +536,7 @@ func (df *DataFrame) Concatenate(otherDf DataFrame) error {
 	otherNames := otherDf.GetColumnNames()
 	names := df.GetColumnNames()
 	for _, name := range otherNames {
-		if !ArrayContainsString(names, name) {
+		if !arrayContainsString(names, name) {
 			newColumn = NewStringSeries(name, []string{})
 			df.AddSeriesForced(newColumn)
 		}
@@ -701,14 +701,14 @@ func (df *DataFrame) SetValue(identifier any, rowIndex int, newValue any) error 
 		return fmt.Errorf("failed to set value for column %v: %w", identifier, err)
 	}
 	if series.DataType == "string" {
-		newS, err := InterfaceConvertToString(newValue)
+		newS, err := interfaceConvertToString(newValue)
 		if err != nil {
 			return fmt.Errorf("failed to set value for column %v: %w", identifier, err)
 		}
 		series.String[rowIndex] = newS
 		return nil
 	}
-	newF, err := InterfaceConvertToFloat(newValue)
+	newF, err := interfaceConvertToFloat(newValue)
 	if err != nil {
 		return fmt.Errorf("failed to set value for column %v: %w", identifier, err)
 	}

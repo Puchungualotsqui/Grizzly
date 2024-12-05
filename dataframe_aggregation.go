@@ -82,16 +82,16 @@ func (df *DataFrame) CountWord(word string) (DataFrame, error) {
 	var count float64
 	var result DataFrame
 	var err error
-	number, numberToo := TryConvertToFloat(word)
+	number, numberToo := tryConvertToFloat(word)
 	for _, series := range df.Columns {
 		if series.DataType == "float" {
 			if numberToo == true {
-				count = ArrayFloatCountValue(series.Float, number)
+				count = arrayFloatCountValue(series.Float, number)
 			} else {
 				count = 0
 			}
 		} else {
-			count = ArrayStringCountWord(series.String, word)
+			count = arrayStringCountWord(series.String, word)
 		}
 		err = result.CreateFloatColumn(series.Name, []float64{count})
 		if err != nil {
@@ -126,12 +126,12 @@ func (df *DataFrame) GetUniqueValues() DataFrame {
 	var tempFloat []float64
 	for _, column := range df.Columns {
 		if column.DataType == "string" {
-			tempString = ArrayUniqueValuesString(column.String)
+			tempString = arrayUniqueValuesString(column.String)
 			temp = NewStringSeries(column.Name, tempString)
 			result.Columns = append(result.Columns, temp)
 			tempString = nil
 		} else {
-			tempFloat = ArrayUniqueValuesFloat(column.Float)
+			tempFloat = arrayUniqueValuesFloat(column.Float)
 			temp = NewFloatSeries(column.Name, tempFloat)
 			result.Columns = append(result.Columns, temp)
 			tempFloat = nil
@@ -148,11 +148,11 @@ func (df *DataFrame) CountNaNValues() DataFrame {
 		series[i].DataType = "float"
 		series[i].Name = column.Name
 		if column.DataType == "float" {
-			count = ArrayFloatCountNaNValue(column.Float)
+			count = arrayFloatCountNaNValue(column.Float)
 			series[i].Float = []float64{count}
 
 		} else {
-			count = ArrayStringCountWord(column.String, "NaN")
+			count = arrayStringCountWord(column.String, "NaN")
 			series[i].Float = []float64{count}
 		}
 	}

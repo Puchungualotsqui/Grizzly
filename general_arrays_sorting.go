@@ -51,13 +51,13 @@ func ParallelSortFloat(arr []float64) []float64 {
 	// Collect and merge sorted chunks
 	sortedResult := make([]float64, 0, n)
 	for sortedChunk := range chunks {
-		sortedResult = MergeFloat(sortedResult, sortedChunk)
+		sortedResult = mergeFloat(sortedResult, sortedChunk)
 	}
 
 	return sortedResult
 }
 
-func MergeFloat(left, right []float64) []float64 {
+func mergeFloat(left, right []float64) []float64 {
 	result := make([]float64, 0, len(left)+len(right))
 	i, j := 0, 0
 	for i < len(left) && j < len(right) {
@@ -75,8 +75,8 @@ func MergeFloat(left, right []float64) []float64 {
 	return result
 }
 
-// ParallelSortString performs a parallel sort on an array of strings.
-func ParallelSortString(arr []string) []string {
+// parallelSortString performs a parallel sort on an array of strings.
+func parallelSortString(arr []string) []string {
 	n := len(arr)
 	if n <= 1 {
 		return arr // Already sorted
@@ -120,14 +120,14 @@ func ParallelSortString(arr []string) []string {
 	// Collect and merge sorted chunks
 	sortedResult := make([]string, 0, n)
 	for sortedChunk := range chunks {
-		sortedResult = MergeString(sortedResult, sortedChunk)
+		sortedResult = mergeString(sortedResult, sortedChunk)
 	}
 
 	return sortedResult
 }
 
-// MergeString merges two sorted string slices into one sorted slice.
-func MergeString(left, right []string) []string {
+// mergeString merges two sorted string slices into one sorted slice.
+func mergeString(left, right []string) []string {
 	result := make([]string, 0, len(left)+len(right))
 	i, j := 0, 0
 	for i < len(left) && j < len(right) {

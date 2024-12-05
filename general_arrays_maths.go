@@ -4,8 +4,8 @@ import (
 	"math"
 )
 
-func ArrayMean(data []float64) float64 {
-	chain := ArrayFloatBase(0, data, func(info float64, result float64) float64 {
+func arrayMean(data []float64) float64 {
+	chain := arrayFloatBase(0, data, func(info float64, result float64) float64 {
 		result = result + info
 		return result
 	})
@@ -18,8 +18,8 @@ func ArrayMean(data []float64) float64 {
 	return result
 }
 
-func ArrayProduct(data []float64) float64 {
-	chain := ArrayFloatBase(1, data, func(info float64, result float64) float64 {
+func arrayProduct(data []float64) float64 {
+	chain := arrayFloatBase(1, data, func(info float64, result float64) float64 {
 		result = result * info
 		return result
 	})
@@ -31,8 +31,8 @@ func ArrayProduct(data []float64) float64 {
 	return result
 }
 
-func ArraySum(data []float64) float64 {
-	chain := ArrayFloatBase(0, data, func(info float64, result float64) float64 {
+func arraySum(data []float64) float64 {
+	chain := arrayFloatBase(0, data, func(info float64, result float64) float64 {
 		result = result + info
 		return result
 	})
@@ -44,14 +44,14 @@ func ArraySum(data []float64) float64 {
 	return result
 }
 
-func ArrayVariance(data []float64, meanP ...float64) float64 {
+func arrayVariance(data []float64, meanP ...float64) float64 {
 	var mean float64
 	if len(meanP) != 0 {
 		mean = meanP[0]
 	} else {
-		mean = ArrayMean(data)
+		mean = arrayMean(data)
 	}
-	chain := ArrayFloatBase(0, data, func(info float64, result float64) float64 {
+	chain := arrayFloatBase(0, data, func(info float64, result float64) float64 {
 		diff := info - mean
 		return result + diff*diff // Accumulate the squared difference
 	})
@@ -65,8 +65,8 @@ func ArrayVariance(data []float64, meanP ...float64) float64 {
 	return sumOfSquaredDiffs / float64(len(data))
 }
 
-func ArrayMin(data []float64) float64 {
-	maxChan := ArrayFloatBase(math.MaxFloat64, data, func(info float64, result float64) float64 {
+func arrayMin(data []float64) float64 {
+	maxChan := arrayFloatBase(math.MaxFloat64, data, func(info float64, result float64) float64 {
 		if info < result {
 			result = info
 		}
@@ -82,8 +82,8 @@ func ArrayMin(data []float64) float64 {
 	return minVal
 }
 
-func ArrayMax(data []float64) float64 {
-	maxChan := ArrayFloatBase(math.MaxFloat64*-1, data, func(info float64, result float64) float64 {
+func arrayMax(data []float64) float64 {
+	maxChan := arrayFloatBase(math.MaxFloat64*-1, data, func(info float64, result float64) float64 {
 		if info > result {
 			result = info
 		}
@@ -99,7 +99,7 @@ func ArrayMax(data []float64) float64 {
 	return minVal
 }
 
-func ArrayMedian(nums []float64) float64 {
+func arrayMedian(nums []float64) float64 {
 	nums = ParallelSortFloat(nums)
 	n := len(nums)
 
@@ -112,7 +112,7 @@ func ArrayMedian(nums []float64) float64 {
 	}
 }
 
-func ArrayCalculatePercentile(nums []float64, percentile float64) float64 {
+func arrayCalculatePercentile(nums []float64, percentile float64) float64 {
 	size := len(nums)
 	index := (percentile / 100.0) * float64(size)
 	lower := int(index)

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func InterfaceConvertToString(value any) (string, error) {
+func interfaceConvertToString(value any) (string, error) {
 	switch v := value.(type) {
 	case float64:
 		return fmt.Sprintf("%.2f", v), nil
@@ -18,7 +18,7 @@ func InterfaceConvertToString(value any) (string, error) {
 	}
 }
 
-func InterfaceConvertToFloat(value any) (float64, error) {
+func interfaceConvertToFloat(value any) (float64, error) {
 	switch v := value.(type) {
 	case float64:
 		return v, nil
