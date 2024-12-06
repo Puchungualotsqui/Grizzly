@@ -318,16 +318,21 @@ Replace the whole value of each value.
 df.Replace("name", "Dabid", "David")
 ```
 ### DropByIndex
-Drop column indicating the index.
+Drop column indicating the index. And return a dataframe with dropped columns.
 - index *...int*: index to drop.
 ```
 df.DropByIndex(1,2,3,4)
 ```
 ### DropByName
-Drop column indicating the names.
+Drop column indicating the names. And return a dataframe with dropped columns.
 - name *...string*: column names to drop.
 ```
 df.DropByName("names", "ages")
+```
+### DropDynamic
+Drop column indicating the name or index of it.
+```
+df.DropDynamic(0)
 ```
 ### ConvertStringToFloat
 Try to convert a string column into float column.
