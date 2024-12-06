@@ -600,3 +600,12 @@ Export Dataframe as a CSV file. It is better for small Dataframes.
 ```
 df.ExportToCSVSimple("example.csv")
 ```
+## Converters
+### GrizzlyToMatrix
+Converts Grizzly dataframe to a matrix *[row][column]float64*
+```
+var matrix [][]float64
+var err error
+
+matrix, err := grizzly.GrizzlyToMatrix(df)
+```
